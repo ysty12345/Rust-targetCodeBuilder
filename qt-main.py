@@ -4,7 +4,8 @@ from PyQt5.QtGui import QFont, QPalette, QColor, QPainter, QFontMetrics, QPen, Q
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout,
     QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QLabel, QTextEdit, QPushButton, QMessageBox,
-    QAbstractScrollArea, QStyleFactory, QHeaderView, QGraphicsScene, QGraphicsView
+    QAbstractScrollArea, QStyleFactory, QHeaderView, QGraphicsScene, QGraphicsView, QGraphicsSimpleTextItem,
+    QGraphicsItem, QGraphicsRectItem
 )
 from myLexer import Lexer
 from myParser import Parser
@@ -30,6 +31,67 @@ def setModernStyle(app):
     palette.setColor(QPalette.Text, QColor(30, 30, 30))  # 文本颜色
     palette.setColor(QPalette.Button, QColor(200, 200, 200))
     app.setPalette(palette)
+
+
+def get_color(root):
+    if root in tokenKeywords:
+        return QColor("#007acc")  # 蓝色
+    elif root in tokenSymbols:
+        return QColor("#2ecc71")  # 绿色
+    elif root in ["identifier", "integer_constant"]:
+        return QColor("#e74c3c")  # 红色
+    else:
+        return QColor("#e67e22")  # 橙色
+
+
+class AstNodeItem(QGraphicsRectItem):
+    def __init__(self, node_id, text, x, y, w, h, color, font, node_data, parent=None):
+        super().__init__(x, y, w, h, parent)
+        self.setBrush(QBrush(color))
+        self.setPen(QPen(Qt.black))
+        self.setAcceptHoverEvents(True)
+        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        self.node_id = node_id
+        self.node_data = node_data
+        self.children_lines = []
+        self.children_items = []
+        self.collapsed = False
+
+        self.text_item = QGraphicsSimpleTextItem(text, self)
+        self.text_item.setFont(font)
+        text_rect = self.text_item.boundingRect()
+        self.text_item.setPos(x + (w - text_rect.width()) / 2, y + (h - text_rect.height()) / 2)
+
+    def hoverEnterEvent(self, event):
+        self.setBrush(QBrush(Qt.yellow))
+        super().hoverEnterEvent(event)
+
+    def hoverLeaveEvent(self, event):
+        self.setBrush(QBrush(get_color(self.node_data["root"])))
+        super().hoverLeaveEvent(event)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            QMessageBox.information(None, "节点信息", str(self.node_data), QMessageBox.Ok)
+        elif event.button() == Qt.RightButton:
+            self.toggleCollapse()
+        super().mousePressEvent(event)
+
+    def toggleCollapse(self):
+        self.collapsed = not self.collapsed
+        for child_item, line in zip(self.children_items, self.children_lines):
+            child_item.setVisible(not self.collapsed)
+            line.setVisible(not self.collapsed)
+            if hasattr(child_item, "collapse_all"):
+                child_item.collapse_all(self.collapsed)
+
+    def collapse_all(self, collapsed):
+        self.setVisible(not collapsed)
+        for child_item, line in zip(self.children_items, self.children_lines):
+            child_item.setVisible(not collapsed)
+            line.setVisible(not collapsed)
+            if hasattr(child_item, "collapse_all"):
+                child_item.collapse_all(collapsed)
 
 
 class Compiler(QObject):
@@ -234,16 +296,6 @@ class CompilerGUI(QMainWindow):
             height = metrics.height() + 8
             return width, height
 
-        def get_color(root):
-            if root in tokenKeywords:
-                return QColor("#007acc")  # 蓝色
-            elif root in tokenSymbols:
-                return QColor("#2ecc71")  # 绿色
-            elif root in ["identifier", "integer_constant"]:
-                return QColor("#e74c3c")  # 红色
-            else:
-                return QColor("#e67e22")  # 橙色
-
         # 分配唯一 ID 给每个节点以便索引
         def assign_ids(node):
             node["id"] = id(node)
@@ -274,26 +326,26 @@ class CompilerGUI(QMainWindow):
             text = node["root"]
             x, y = positions[node["id"]]
             w, h = sizes[node["id"]]
-            # 创建矩形
-            rect_item = self.scene.addRect(x, y, w, h, QPen(Qt.black), QBrush(get_color(text)))
-            # 创建文字
-            label_item = self.scene.addText(text)
-            label_item.setFont(font)
-            # 将文字放到矩形中央
-            label_item.setPos(x, y)
 
-            cx, cy = x + w / 2, y + h / 2
+            item = AstNodeItem(node["id"], text, x, y, w, h, get_color(text), font, node, parent=None)
+            self.scene.addItem(item)
+            node_items[node["id"]] = item
 
             for child in node.get("children", []):
+                draw_node(child)
                 child_x, child_y = positions[child["id"]]
                 child_w, child_h = sizes[child["id"]]
-                start_x, start_y = child_x + child_w / 2, child_y
-                end_x, end_y = cx, y + h
-                self.scene.addLine(start_x, start_y, end_x, end_y)
-                draw_node(child)
+                line = self.scene.addLine(
+                    x + w / 2, y + h,
+                    child_x + child_w / 2, child_y,
+                    QPen(Qt.black)
+                )
+                item.children_lines.append(line)
+                item.children_items.append(node_items[child["id"]])
 
         positions = {}  # 存储每个节点的实际位置
         sizes = {}  # 存储每个节点的宽高
+        node_items = {}
         font = QFont("Arial", 10)
         x_spacing, y_spacing = 30, 80
 
