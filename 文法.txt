@@ -1,0 +1,212 @@
+1.1
+Program -> DeclList | None
+DeclList -> Decl DeclList | Decl
+Decl -> FunctionDecl
+FunctionDecl -> FunctionHeader Block
+FunctionHeader -> fn identifier ( ParamList )
+ParamList -> Params | None
+Params -> identifier
+Block -> { StmtList }
+StmtList -> Stmt StmtList | None
+Stmt -> LetStmt ; | AssignStmt ; | ExprStmt ;
+LetStmt -> mut identifier : Type = Expr
+AssignStmt -> identifier = Expr
+ExprStmt -> Expr
+Expr -> identifier | integer_constant
+Type -> i32
+None -> epsilon
+
+1.5
+Program -> DeclList | None
+DeclList -> Decl DeclList | Decl
+Decl -> FunctionDecl
+FunctionDecl -> FunctionHeader Block
+FunctionHeader -> fn identifier ( ParamList ) | fn identifier ( ParamList ) -> Type
+ParamList -> Param ParamListTail | None
+ParamListTail -> , Param ParamListTail | None
+Param -> VarDeclInner : Type
+VarDeclInner -> mut identifier
+Block -> { StmtList }
+StmtList -> Stmt StmtList | None
+Stmt -> LetStmt ; | AssignStmt ; | ExprStmt ; | ReturnStmt ; | ;
+LetStmt -> mut identifier : Type = Expr
+AssignStmt -> identifier = Expr
+ExprStmt -> Expr
+ReturnStmt -> return | return Expr
+Expr -> identifier | integer_constant
+Type -> i32
+None -> epsilon
+
+2.3
+Program -> DeclList | None
+DeclList -> Decl DeclList | Decl
+Decl -> FunctionDecl
+FunctionDecl -> FunctionHeader Block
+FunctionHeader -> fn identifier ( ParamList ) | fn identifier ( ParamList ) -> Type
+ParamList -> Param ParamListTail | None
+ParamListTail -> , Param ParamListTail | None
+Param -> VarDeclInner : Type
+VarDeclInner -> mut identifier
+Block -> { StmtList }
+StmtList -> Stmt StmtList | None
+Stmt -> DeclOnly | DeclAssign | AssignStmt | ExprStmt | ReturnStmt | ;
+DeclOnly -> let VarDeclInner : Type ; | let VarDeclInner ;
+DeclAssign -> let VarDeclInner : Type = Expr ; | let VarDeclInner = Expr ;
+Lvalue -> identifier
+Expr -> identifier | integer_constant
+AssignStmt -> Lvalue = Expr ;
+ExprStmt -> Expr ;
+ReturnStmt -> return ; | return Expr ;
+Type -> i32
+None -> epsilon
+
+3.1.
+Program -> DeclList | None
+DeclList -> Decl DeclList | Decl
+Decl -> FunctionDecl
+FunctionDecl -> FunctionHeader Block
+FunctionHeader -> fn identifier ( ParamList ) | fn identifier ( ParamList ) -> Type
+ParamList -> Param ParamListTail | None
+ParamListTail -> , Param ParamListTail | None
+Param -> VarDeclInner : Type
+VarDeclInner -> mut identifier
+Block -> { StmtList }
+StmtList -> Stmt StmtList | None
+Stmt -> DeclOnly | DeclAssign | AssignStmt | ExprStmt | ReturnStmt | ;
+DeclOnly -> let VarDeclInner : Type ; | let VarDeclInner ;
+DeclAssign -> let VarDeclInner : Type = Expr ; | let VarDeclInner = Expr ;
+AssignStmt -> Lvalue = Expr ;
+ExprStmt -> Expr ;
+ReturnStmt -> return ; | return Expr ;
+Lvalue -> identifier
+Expr -> AddExpr
+AddExpr -> Term
+Term -> Factor
+Factor -> Element
+Element -> integer_constant | identifier | ( Expr )
+Type -> i32
+None -> epsilon
+
+3.3
+Program -> DeclList | None
+DeclList -> Decl DeclList | Decl
+Decl -> FunctionDecl
+FunctionDecl -> FunctionHeader Block
+FunctionHeader -> fn identifier ( ParamList ) | fn identifier ( ParamList ) -> Type
+ParamList -> Param ParamListTail | None
+ParamListTail -> , Param ParamListTail | None
+Param -> VarDeclInner : Type
+VarDeclInner -> mut identifier
+Block -> { StmtList }
+StmtList -> Stmt StmtList | None
+Stmt -> DeclOnly | DeclAssign | AssignStmt | ExprStmt | ReturnStmt | ;
+DeclOnly -> let VarDeclInner : Type ; | let VarDeclInner ;
+DeclAssign -> let VarDeclInner : Type = Expr ; | let VarDeclInner = Expr ;
+AssignStmt -> Lvalue = Expr ;
+ExprStmt -> Expr ;
+ReturnStmt -> return ; | return Expr ;
+Lvalue -> identifier
+
+Expr -> Expr CmpOp AddExpr | AddExpr
+AddExpr -> AddExpr AddOp Term | Term
+Term -> Term MulOp Factor | Factor
+Factor -> Element
+Element -> integer_constant | identifier | ( Expr ) | identifier ( ArgList )
+ArgList -> Expr ArgListTail | None
+ArgListTail -> , Expr ArgListTail | None
+
+CmpOp -> < | <= | > | >= | == | !=
+AddOp -> + | -
+MulOp -> * | /
+
+Type -> i32
+None -> epsilon
+
+4.2
+Program -> DeclList | None
+DeclList -> Decl DeclList | Decl
+Decl -> FunctionDecl
+FunctionDecl -> FunctionHeader Block
+FunctionHeader -> fn identifier ( ParamList ) | fn identifier ( ParamList ) -> Type
+ParamList -> Param ParamListTail | None
+ParamListTail -> , Param ParamListTail | None
+Param -> VarDeclInner : Type
+VarDeclInner -> mut identifier
+Block -> { StmtList }
+StmtList -> Stmt StmtList | None
+Stmt -> IfStmt | DeclOnly | DeclAssign | AssignStmt | ExprStmt | ReturnStmt | ;
+
+IfStmt -> if Expr Block ElsePart
+ElsePart -> else IfStmt | else Block | None
+
+DeclOnly -> let VarDeclInner : Type ; | let VarDeclInner ;
+DeclAssign -> let VarDeclInner : Type = Expr ; | let VarDeclInner = Expr ;
+AssignStmt -> Lvalue = Expr ;
+ExprStmt -> Expr ;
+ReturnStmt -> return ; | return Expr ;
+Lvalue -> identifier
+
+Expr -> Expr CmpOp AddExpr | AddExpr
+AddExpr -> AddExpr AddOp Term | Term
+Term -> Term MulOp Factor | Factor
+Factor -> Element
+Element -> integer_constant | identifier | ( Expr ) | identifier ( ArgList )
+ArgList -> Expr ArgListTail | None
+ArgListTail -> , Expr ArgListTail | None
+
+CmpOp -> < | <= | > | >= | == | !=
+AddOp -> + | -
+MulOp -> * | /
+
+Type -> i32
+None -> epsilon
+
+5.3
+Program -> DeclList | None
+DeclList -> Decl DeclList | Decl
+Decl -> FunctionDecl
+FunctionDecl -> FunctionHeader Block
+FunctionHeader -> fn identifier ( ParamList ) | fn identifier ( ParamList ) -> Type
+ParamList -> Param ParamListTail | None
+ParamListTail -> , Param ParamListTail | None
+Param -> VarDeclInner : Type
+VarDeclInner -> mut identifier
+Block -> { StmtList }
+StmtList -> Stmt StmtList | None
+
+Stmt -> LoopStmt | IfStmt | DeclOnly | DeclAssign | AssignStmt | ExprStmt | ReturnStmt | ;
+
+LoopStmt -> WhileStmt | ForStmt | LoopBlock
+WhileStmt -> while Expr Block
+ForStmt -> for VarDeclInner in Iterable Block
+Iterable -> Expr .. Expr
+LoopBlock -> loop Block
+
+IfStmt -> if Expr Block ElsePart
+ElsePart -> else IfStmt | else Block | None
+
+DeclOnly -> let VarDeclInner : Type ; | let VarDeclInner ;
+DeclAssign -> let VarDeclInner : Type = Expr ; | let VarDeclInner = Expr ;
+AssignStmt -> Lvalue = Expr ;
+ExprStmt -> Expr ;
+ReturnStmt -> return ; | return Expr ;
+
+Lvalue -> identifier
+
+Expr -> Expr CmpOp AddExpr | AddExpr
+AddExpr -> AddExpr AddOp Term | Term
+Term -> Term MulOp Factor | Factor
+Factor -> Element
+Element -> integer_constant | identifier | ( Expr ) | identifier ( ArgList )
+ArgList -> Expr ArgListTail | None
+ArgListTail -> , Expr ArgListTail | None
+
+CmpOp -> < | <= | > | >= | == | !=
+AddOp -> + | -
+MulOp -> * | /
+
+Type -> i32
+None -> epsilon
+
+5.4
+
