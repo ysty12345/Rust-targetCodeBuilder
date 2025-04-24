@@ -1,6 +1,5 @@
 import json
 from string import digits, ascii_letters
-
 from tokenType import tokenType, tokenSymbols, tokenKeywords
 
 def enum_to_str(obj):
@@ -133,8 +132,7 @@ class Lexer(object):
         annotation = False
         success = True
         for line in lines:
-            line = line.strip()
-            if not line:
+            if not line.strip():
                 continue
             self.dfa.reset()
             token_type = None
