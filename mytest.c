@@ -1,3 +1,3 @@
-fn pro(a){
+fn pro(){
     b = a;
 }

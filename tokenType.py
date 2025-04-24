@@ -68,6 +68,7 @@ class tokenType(Enum):
 
     EOF = "eof"
 
+
 tokenKeywords = {
     "i32": tokenType.KW_I32,
     "let": tokenType.KW_LET,
@@ -131,6 +132,7 @@ tokenSymbols = {
     "#": tokenType.EOF,
 
 }
+
 
 def tokenType_to_terminal(tokenType: tokenType) -> str:
     for key, value in tokenKeywords.items():

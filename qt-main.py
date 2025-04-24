@@ -1,12 +1,36 @@
 import json
 from PyQt5.QtCore import QObject, pyqtSlot, QThread, Qt
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QPalette, QColor, QPainter, QFontMetrics, QPen, QBrush
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout,
-    QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QLabel, QTextEdit, QPushButton, QMessageBox
+    QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QLabel, QTextEdit, QPushButton, QMessageBox,
+    QAbstractScrollArea, QStyleFactory, QHeaderView, QGraphicsScene, QGraphicsView
 )
 from myLexer import Lexer
 from myParser import Parser
+from tokenType import tokenKeywords, tokenSymbols
+
+
+def beautify_table_widget(table: QTableWidget):
+    """设置 QTableWidget 的美观显示属性"""
+    table.resizeColumnsToContents()
+    table.resizeRowsToContents()
+    # table.horizontalHeader().setStretchLastSection(True)
+    table.setAlternatingRowColors(True)
+    table.verticalHeader().setVisible(False)
+    table.setEditTriggers(QTableWidget.NoEditTriggers)  # 禁止编辑（可选）
+
+
+def setModernStyle(app):
+    app.setStyle(QStyleFactory.create("Fusion"))
+
+    palette = QPalette()
+    palette.setColor(QPalette.Window, QColor(245, 245, 245))  # 背景
+    palette.setColor(QPalette.Base, QColor(255, 255, 255))  # 编辑框背景
+    palette.setColor(QPalette.Text, QColor(30, 30, 30))  # 文本颜色
+    palette.setColor(QPalette.Button, QColor(200, 200, 200))
+    app.setPalette(palette)
+
 
 class Compiler(QObject):
     def __init__(self, parent=None):
@@ -56,6 +80,7 @@ class Compiler(QObject):
     def getLex(self, code_str: str):
         return self.lexer.getLex(code_str.splitlines())
 
+
 class CompilerGUI(QMainWindow):
     def __init__(self, compiler):
         super().__init__()
@@ -69,18 +94,21 @@ class CompilerGUI(QMainWindow):
         self.editor_tab = QWidget()
         self.lex_tab = QWidget()
         self.ast_tab = QWidget()
+        self.ast_graph_tab = QWidget()
         self.table_tab = QWidget()
         self.process_tab = QWidget()
 
         self.tabs.addTab(self.editor_tab, "源代码编辑")
         self.tabs.addTab(self.lex_tab, "词法分析")
         self.tabs.addTab(self.ast_tab, "语法树")
+        self.tabs.addTab(self.ast_graph_tab, "语法树图示")
         self.tabs.addTab(self.table_tab, "分析表")
         self.tabs.addTab(self.process_tab, "规约过程")
 
         self.initEditorTab()
         self.initLexTab()
         self.initAstTab()
+        self.initAstGraphTab()
         self.initTableTab()
         self.initProcessTab()
 
@@ -126,6 +154,22 @@ class CompilerGUI(QMainWindow):
         layout.addWidget(self.ast_tree)
         self.ast_tab.setLayout(layout)
 
+    def initAstGraphTab(self):
+        class ZoomableGraphicsView(QGraphicsView):
+            def __init__(self, scene):
+                super().__init__(scene)
+                self.setDragMode(QGraphicsView.ScrollHandDrag)
+
+            def wheelEvent(self, event):
+                factor = 1.2 if event.angleDelta().y() > 0 else 0.8
+                self.scale(factor, factor)
+
+        layout = QVBoxLayout()
+        self.scene = QGraphicsScene()
+        self.ast_view = ZoomableGraphicsView(self.scene)
+        layout.addWidget(self.ast_view)
+        self.ast_graph_tab.setLayout(layout)
+
     def initTableTab(self):
         layout = QVBoxLayout()
         self.action_label = QLabel("ACTION 表")
@@ -149,6 +193,7 @@ class CompilerGUI(QMainWindow):
     def updateAll(self, data):
         self.showLexResult(data["lexer"])
         self.showAstTree(data["ast"])
+        self.showAstGraphTree(data["ast"])
         self.showTables(data["action"], data["goto"])
         self.showProcess(data["process"])
 
@@ -165,8 +210,12 @@ class CompilerGUI(QMainWindow):
             self.lex_table.setItem(row, 3, QTableWidgetItem(str(token["loc"]["row"])))
             self.lex_table.setItem(row, 4, QTableWidgetItem(str(token["loc"]["col"])))
 
+        self.lex_table.verticalHeader().setVisible(False)
+        beautify_table_widget(self.lex_table)
+
     def showAstTree(self, ast):
         self.ast_tree.clear()
+
         def addNode(node, parent=None):
             item = QTreeWidgetItem([node["root"]])
             if parent is None:
@@ -178,30 +227,124 @@ class CompilerGUI(QMainWindow):
 
         addNode(ast)
 
+    def showAstGraphTree(self, ast):
+        def get_node_size(text, font):
+            metrics = QFontMetrics(font)
+            width = metrics.horizontalAdvance(text) + 16
+            height = metrics.height() + 8
+            return width, height
+
+        def get_color(root):
+            if root in tokenKeywords:
+                return QColor("#007acc")  # 蓝色
+            elif root in tokenSymbols:
+                return QColor("#2ecc71")  # 绿色
+            elif root in ["identifier", "integer_constant"]:
+                return QColor("#e74c3c")  # 红色
+            else:
+                return QColor("#e67e22")  # 橙色
+
+        # 分配唯一 ID 给每个节点以便索引
+        def assign_ids(node):
+            node["id"] = id(node)
+            for child in node.get("children", []):
+                assign_ids(child)
+
+        def calculate_layout(node, depth=0):
+            text = node["root"]
+            width, height = get_node_size(text, font)
+            sizes[node["id"]] = (width, height)
+
+            children = node.get("children", [])
+            child_xs = []
+
+            if children:
+                for child in children:
+                    child_center_x = calculate_layout(child, depth + 1)
+                    child_xs.append(child_center_x)
+                node_x = (min(child_xs) + max(child_xs)) / 2
+            else:
+                node_x = calculate_layout.offset
+                calculate_layout.offset += width + x_spacing
+
+            positions[node["id"]] = (node_x, depth * (height + y_spacing))
+            return node_x
+
+        def draw_node(node):
+            text = node["root"]
+            x, y = positions[node["id"]]
+            w, h = sizes[node["id"]]
+            # 创建矩形
+            rect_item = self.scene.addRect(x, y, w, h, QPen(Qt.black), QBrush(get_color(text)))
+            # 创建文字
+            label_item = self.scene.addText(text)
+            label_item.setFont(font)
+            # 将文字放到矩形中央
+            label_item.setPos(x, y)
+
+            cx, cy = x + w / 2, y + h / 2
+
+            for child in node.get("children", []):
+                child_x, child_y = positions[child["id"]]
+                child_w, child_h = sizes[child["id"]]
+                start_x, start_y = child_x + child_w / 2, child_y
+                end_x, end_y = cx, y + h
+                self.scene.addLine(start_x, start_y, end_x, end_y)
+                draw_node(child)
+
+        positions = {}  # 存储每个节点的实际位置
+        sizes = {}  # 存储每个节点的宽高
+        font = QFont("Arial", 10)
+        x_spacing, y_spacing = 30, 80
+
+        assign_ids(ast)
+        calculate_layout.offset = 0
+        calculate_layout(ast)
+
+        self.scene.clear()
+        draw_node(ast)
+
+        # 缩放和平移设置
+        self.ast_view.setRenderHint(QPainter.Antialiasing)
+        self.ast_view.fitInView(self.scene.itemsBoundingRect(), Qt.KeepAspectRatio)
+
     def showTables(self, action, goto):
         def fill_table(widget, data):
-            widget.setColumnCount(len(data[0]))
-            widget.setRowCount(len(data))
-            for i, row in enumerate(data):
+            headers = data[0]
+            widget.setColumnCount(len(headers))
+            widget.setHorizontalHeaderLabels(headers)
+            widget.setRowCount(len(data) - 1)
+            for i, row in enumerate(data[1:]):
                 for j, cell in enumerate(row):
                     widget.setItem(i, j, QTableWidgetItem(cell))
+
+            beautify_table_widget(widget)
 
         fill_table(self.action_table, action)
         fill_table(self.goto_table, goto)
 
     def showProcess(self, process):
-        headers = ["状态栈", "状态", "符号栈", "输入串", "动作"]
+        headers = process[0]
         self.proc_table.setColumnCount(len(headers))
         self.proc_table.setHorizontalHeaderLabels(headers)
-        self.proc_table.setRowCount(len(process))
-        for i, row in enumerate(process):
+        self.proc_table.setRowCount(len(process) - 1)
+        for i, row in enumerate(process[1:]):
             for j, val in enumerate(row):
-                self.proc_table.setItem(i, j, QTableWidgetItem(val))
+                item = QTableWidgetItem(str(val))
+                item.setTextAlignment(Qt.AlignLeft | Qt.AlignTop)
+                item.setFlags(item.flags() ^ Qt.ItemIsEditable)
+                item.setToolTip(str(val))
+                self.proc_table.setItem(i, j, item)
+
+        beautify_table_widget(self.proc_table)
+
 
 if __name__ == "__main__":
     # Initialize the application and the compiler
     import sys
+
     app = QApplication(sys.argv)
+    setModernStyle(app)
     compiler = Compiler()
     gui = CompilerGUI(compiler)
     gui.show()
