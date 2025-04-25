@@ -1,5 +1,6 @@
+import json
 import re
-from tokenType import tokenType_to_terminal
+from tokenType import tokenType_to_terminal, tokenType
 
 ACTION_ACC = 0
 ACTION_S = 1
@@ -135,7 +136,8 @@ class Parser:
         "..",
         "#",
     ]
-    def __init__(self):
+
+    def __init__(self, filename="mytest.cfg"):
         self.epsilon_id = len(self.terminal_symbols)
         self.non_terminal_symbols = ["epsilon"]
         self.firsts = []
@@ -146,7 +148,7 @@ class Parser:
         self.action_table = []
         self.lr1_analysis_table = []
 
-        self.read_productions(filename="mytest.cfg") #
+        self.read_productions(filename=filename)
         self.find_firsts()
         self.find_gos()
         self.find_gotos_and_actions()
@@ -183,13 +185,13 @@ class Parser:
                 for line in fin.readlines():  # 逐行读取文件内容
                     line = line.split("#")[0].strip()  # 去除注释部分
                     if line == "":
-                        continue # 如果行为空，跳过
+                        continue  # 如果行为空，跳过
                     # 用正则表达式匹配产生式规则的格式
                     match = re.match(r"\s*([^->]+)\s*->\s*(.*)", line)
                     if match:
                         left_side = match.group(1).strip()  # 获取产生式左侧（非终结符）并去除空格
                         right_side = match.group(2).strip()  # 获取产生式右侧（可能包含多个替代项）并去除空格
-                        alternatives = [ alt.strip() for alt in right_side.split("|")]  # 将右侧的替代项分割成列表
+                        alternatives = [alt.strip() for alt in right_side.split("|")]  # 将右侧的替代项分割成列表
 
                         # 处理非终结符
                         if left_side not in self.non_terminal_symbols:
@@ -301,8 +303,8 @@ class Parser:
             if self.epsilon_id not in self.firsts[alpha[i]]:
                 break  # 如果epsilon不在当前符号的First集合中，终止循环
             if (
-                i == len(alpha) - 1
-                and self.epsilon_id in self.firsts[alpha[i]]
+                    i == len(alpha) - 1
+                    and self.epsilon_id in self.firsts[alpha[i]]
             ):
                 # 如果是句子的最后一个符号，并且epsilon在其First集合中，添加epsilon到句子First集合中
                 firsts.add(self.epsilon_id)
@@ -338,7 +340,7 @@ class Parser:
                     # 创建新的项目
                     alpha = []
                     # 从当前产生式符号的下一个开始遍历，如果不是epsilon
-                    for k in range(lr1_item.dot_pos + 1, len(production.to_ids),):
+                    for k in range(lr1_item.dot_pos + 1, len(production.to_ids), ):
                         if production.to_ids[k] != self.epsilon_id:
                             alpha.append(production.to_ids[k])
                     alpha.append(lr1_item.terminal_id)
@@ -535,7 +537,7 @@ class Parser:
         - 树形结构，表示语法分析的结果
         """
         stack = []
-        item = {"state": 0, "tree": {"root": '#'} }
+        item = {"state": 0, "tree": {"root": '#'}}
         stack.append(item)
         self.parse_process_display = []
         self.parse_process_display.append(['步骤', '状态栈', '符号栈', '待规约串', '动作说明'])
@@ -554,7 +556,7 @@ class Parser:
             token = tokenType_to_terminal(cur["prop"])
             token_id = self.get_id_by_str(token)
             if token_id >= self.epsilon_id:
-                print(f"Error: {token} at {cur['loc'] }")
+                print(f"Error: {token} at {cur['loc']}")
                 return {"root": "语法错误/代码不完整，无法解析1", "err": cur["loc"]}
 
             # 用于展示
@@ -565,7 +567,7 @@ class Parser:
             # if stack[-1]["state"] == 0:
             #     print(self.action_table[0], "-------------")
             if token_id not in current_state:
-                print(f"Error: {token} at {cur['loc'] }")
+                print(f"Error: {token} at {cur['loc']}")
                 return {"root": "语法错误/代码不完整，无法解析2", "err": cur["loc"]}
 
             current_action_list = current_state[token_id]
@@ -603,14 +605,17 @@ class Parser:
                     },
                 }
                 stack.append(item)
-                new_display_item[4] = f'使用产生式({production_literal[:-1]})进行规约' # 去除末尾多的空格
+                new_display_item[4] = f'使用产生式({production_literal[:-1]})进行规约'  # 去除末尾多的空格
             elif first_action[0] == ACTION_ACC:
                 print("Accept")
-                return stack[-1]["tree"]
+                ret = stack[-1]["tree"]
+                with open("parser_out.json", "w", encoding="utf-8") as f:
+                    json.dump(ret, f, indent=4, ensure_ascii=False)
+                return ret
             else:
-                print(f"Error: {token} at {cur['loc'] }")
+                print(f"Error: {token} at {cur['loc']}")
                 return {"root": "语法错误/代码不完整，无法解析3", "err": "parser_error"}
-            
+
             state_stack = [str(item['state']) for item in stack]
             state_stack = ' '.join(state_stack)
 
@@ -628,7 +633,7 @@ class Parser:
     def get_goto_table(self):
         print("Get goto table")
         goto_table = []
-        #去除epsilon
+        # 去除epsilon
         goto_table.append(["Status"] + self.non_terminal_symbols[1:])
         length = len(self.non_terminal_symbols) - 1
         for i in range(len(self.closures)):
@@ -655,100 +660,3 @@ class Parser:
                     )
         print("End get action table")
         return action_table
-
-
-
-from tokenType import tokenType
-if __name__ == "__main__":
-
-    # a = 0b1010
-    # b = 0b0101
-    # b |= a
-    # print(b)
-    # mylist = [1, 2, 3]
-    # for k in range(1, 1):
-    #     print(k)
-    # mykeys = {"int": 'sss'}
-    # mykeys["int"].append("int")
-    # mykeys["int"].append("int")
-    # if "int" in mykeys.keys():
-    #     print("yes")
-    # print(mykeys["int"])
-    # mylist = [(1, [1, 2]), (3, 4), (5, 6)]
-    # if (1, [1, 2]) in mylist:
-    #     print("yes")
-
-    parser = Parser()
-    # id = parser.get_id_by_str("")
-    # print(id)
-    # print(len(parser.terminal_symbols), len(parser.non_terminal_symbols), len(parser.gos), len(parser.closures))
-
-    # set1 = set()
-    # parser.find_firsts_alpha([len(parser.terminal_symbols)], set1)
-    # print(set1)
-    # id = parser.get_id_by_str("ParamList")
-    # parser.find_firsts_alpha([id], set1)
-    # print(set1)
-    # id = parser.get_id_by_str("StmtList")
-    # parser.find_firsts_alpha([id], set1)
-    # print(set1)
-    # for i in range(parser.epsilon_id + len(parser.non_terminal_symbols)):
-    #     parser.find_firsts_alpha([i], set1)
-    #     if parser.epsilon_id in set1:
-    #         print(parser.get_str_by_id(i), end=" ")
-
-    ret = []
-    row = 1
-    ret.append(
-        {
-            "id": 1,
-            "content": "int",
-            "prop": tokenType.KW_INT,
-            "loc": {"row": row, "col": 1},
-        }
-    )
-    ret.append(
-        {
-            "id": 2,
-            "content": "a",
-            "prop": tokenType.IDENTIFIER,
-            "loc": {"row": row, "col": 5},
-        }
-    )
-    ret.append(
-        {
-            "id": 3,
-            "content": ";",
-            "prop": tokenType.SEMI,
-            "loc": {"row": row, "col": 6},
-        }
-    )
-    ret.append(
-        {
-            "id": 4,
-            "content": "#",
-            "prop": tokenType.EOF,
-            "loc": {"row": row, "col": 6},
-        }
-    )
-
-    # print(parser.getParse(ret))
-
-
-
-
-    # for item in parser.gos:
-    #     print(len(item))
-    #     print(item[id])
-    # for item in parser.gos[0].items():
-    #     print(item[0], item[1])
-    # print("---------------------")
-    # for item in parser.goto_table[0].items():
-    #     print(item[0], item[1])
-
-    # print(parser.get_goto_table())
-    # alt = " "
-    # alt_split = [x for x in alt.split()]
-    # for symbol in alt_split:
-    #     print(symbol)
-

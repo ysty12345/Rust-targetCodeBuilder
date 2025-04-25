@@ -190,6 +190,6 @@ class Lexer(object):
         )
         # ret = json.dumps(ret)
         # 写入 JSON 文件
-        with open("output.json", "w", encoding="utf-8") as f:
+        with open("lexer_out.json", "w", encoding="utf-8") as f:
             json.dump(ret, f, indent=4, ensure_ascii=False, default=enum_to_str)
         return ret, success

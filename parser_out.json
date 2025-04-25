@@ -1,0 +1,143 @@
+{
+    "root": "Program",
+    "children": [
+        {
+            "root": "DeclList",
+            "children": [
+                {
+                    "root": "Decl",
+                    "children": [
+                        {
+                            "root": "FunctionDecl",
+                            "children": [
+                                {
+                                    "root": "FunctionHeader",
+                                    "children": [
+                                        {
+                                            "root": "fn",
+                                            "children": []
+                                        },
+                                        {
+                                            "root": "identifier",
+                                            "children": []
+                                        },
+                                        {
+                                            "root": "(",
+                                            "children": []
+                                        },
+                                        {
+                                            "root": "ParamList",
+                                            "children": [
+                                                {
+                                                    "root": "None",
+                                                    "children": [
+                                                        {
+                                                            "root": "epsilon",
+                                                            "children": []
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "root": ")",
+                                            "children": []
+                                        }
+                                    ]
+                                },
+                                {
+                                    "root": "Block",
+                                    "children": [
+                                        {
+                                            "root": "{",
+                                            "children": []
+                                        },
+                                        {
+                                            "root": "StmtList",
+                                            "children": [
+                                                {
+                                                    "root": "Stmt",
+                                                    "children": [
+                                                        {
+                                                            "root": "AssignStmt",
+                                                            "children": [
+                                                                {
+                                                                    "root": "Lvalue",
+                                                                    "children": [
+                                                                        {
+                                                                            "root": "identifier",
+                                                                            "children": []
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "root": "=",
+                                                                    "children": []
+                                                                },
+                                                                {
+                                                                    "root": "Expr",
+                                                                    "children": [
+                                                                        {
+                                                                            "root": "AddExpr",
+                                                                            "children": [
+                                                                                {
+                                                                                    "root": "Term",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "root": "Factor",
+                                                                                            "children": [
+                                                                                                {
+                                                                                                    "root": "Element",
+                                                                                                    "children": [
+                                                                                                        {
+                                                                                                            "root": "identifier",
+                                                                                                            "children": []
+                                                                                                        }
+                                                                                                    ]
+                                                                                                }
+                                                                                            ]
+                                                                                        }
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "root": ";",
+                                                                    "children": []
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "root": "StmtList",
+                                                    "children": [
+                                                        {
+                                                            "root": "None",
+                                                            "children": [
+                                                                {
+                                                                    "root": "epsilon",
+                                                                    "children": []
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "root": "}",
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

@@ -4,3 +4,5 @@ dist/
 build/
 node_modules/
 .ruff_cache/
+*.exe
+/qt-main.spec

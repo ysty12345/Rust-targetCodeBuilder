@@ -95,14 +95,13 @@ class AstNodeItem(QGraphicsRectItem):
 
 
 class Compiler(QObject):
-    def __init__(self, parent=None):
+    def __init__(self, filename, parent=None):
         super().__init__(parent)
         self.lexer = Lexer()
-        self.parser = Parser()
+        self.parser = Parser(filename)
         self.goto_table = self.parser.get_goto_table()
         self.action_table = self.parser.get_action_table()
 
-    @pyqtSlot(str, result=str)
     def process(self, code_str):
         token_list, lexer_success = self.getLex(code_str)
         parse_result = self.getParse(token_list)
@@ -144,7 +143,7 @@ class Compiler(QObject):
 
 
 class CompilerGUI(QMainWindow):
-    def __init__(self, compiler):
+    def __init__(self, compiler, filename="mytest.c"):
         super().__init__()
         self.compiler = compiler
         self.setWindowTitle("编译器可视化分析工具")
@@ -174,7 +173,7 @@ class CompilerGUI(QMainWindow):
         self.initTableTab()
         self.initProcessTab()
 
-        self.loadFile("mytest.c")
+        self.loadFile(filename)
 
     def initEditorTab(self):
         layout = QVBoxLayout()
@@ -361,7 +360,6 @@ class CompilerGUI(QMainWindow):
         # 缩放和平移设置
         self.ast_view.setRenderHint(QPainter.Antialiasing)
         self.ast_view.fitInView(self.scene.itemsBoundingRect(), Qt.KeepAspectRatio)
-        print(self.scene.itemsBoundingRect())
         bounding_rect = self.scene.itemsBoundingRect()
         expanded_rect = QRectF(
             bounding_rect.x() - 100,
@@ -408,7 +406,9 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     setModernStyle(app)
-    compiler = Compiler()
-    gui = CompilerGUI(compiler)
+    cfg_filename = "mytest.cfg"
+    compiler = Compiler(cfg_filename)
+    code_filename = "mytest.c"
+    gui = CompilerGUI(compiler, code_filename)
     gui.show()
     sys.exit(app.exec_())
