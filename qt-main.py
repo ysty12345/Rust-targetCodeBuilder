@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout,
     QTableWidget, QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QLabel, QTextEdit, QPushButton, QMessageBox,
     QAbstractScrollArea, QStyleFactory, QHeaderView, QGraphicsScene, QGraphicsView, QGraphicsSimpleTextItem,
-    QGraphicsItem, QGraphicsRectItem
+    QGraphicsItem, QGraphicsRectItem, QFileDialog
 )
 from myLexer import Lexer
 from myParser import Parser
@@ -406,9 +406,26 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
     setModernStyle(app)
-    cfg_filename = "mytest.cfg"
+    # 默认文件名
+    default_cfg_filename = "mytest.cfg"
+    default_code_filename = "mytest.c"
+
+    # 选择配置文件
+    cfg_filename, _ = QFileDialog.getOpenFileName(
+        None, "选择文法配置文件", default_cfg_filename, "Config Files (*.cfg);;All Files (*)"
+    )
+    if not cfg_filename:
+        cfg_filename = default_cfg_filename
+
+    # 选择代码文件
+    code_filename, _ = QFileDialog.getOpenFileName(
+        None, "选择代码文件", default_code_filename, "C Files (*.c);;All Files (*)"
+    )
+    if not code_filename:
+        code_filename = default_code_filename
+
+    # 启动编译器和GUI
     compiler = Compiler(cfg_filename)
-    code_filename = "mytest.c"
     gui = CompilerGUI(compiler, code_filename)
     gui.show()
     sys.exit(app.exec_())
