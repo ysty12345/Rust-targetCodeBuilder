@@ -292,8 +292,8 @@ class CompilerGUI(QMainWindow):
     def showAstGraphTree(self, ast):
         def get_node_size(text, font):
             metrics = QFontMetrics(font)
-            width = metrics.horizontalAdvance(text) + 16
-            height = metrics.height() + 8
+            width = metrics.horizontalAdvance(text) + 20
+            height = metrics.height() + 10
             return width, height
 
         # 分配唯一 ID 给每个节点以便索引
@@ -312,21 +312,25 @@ class CompilerGUI(QMainWindow):
 
             if children:
                 for child in children:
-                    child_center_x = calculate_layout(child, depth + 1)
-                    child_xs.append(child_center_x)
-                node_x = (min(child_xs) + max(child_xs)) / 2
+                    child_node_x, child_node_width= calculate_layout(child, depth + 1)
+                    child_xs.append((child_node_x, child_node_width))
+                min_index = child_xs.index(min(child_xs, key=lambda x: x[0]))
+                max_index = child_xs.index(max(child_xs, key=lambda x: x[0]))
+                node_x = (child_xs[min_index][0] + child_xs[min_index][1] / 2 +
+                          child_xs[max_index][0] + child_xs[max_index][1] / 2) / 2 - width / 2
             else:
                 node_x = calculate_layout.offset
                 calculate_layout.offset += width + x_spacing
 
-            positions[node["id"]] = (node_x, depth * (height + y_spacing))
-            return node_x
+            positions[node["id"]] = (node_x + width / 2, depth * (height + y_spacing) + height / 2)
+            return node_x, width
 
         def draw_node(node):
             text = node["root"]
             x, y = positions[node["id"]]
             w, h = sizes[node["id"]]
-
+            x = x - w / 2
+            y = y - h / 2
             item = AstNodeItem(node["id"], text, x, y, w, h, get_color(text), font, node, parent=None)
             self.scene.addItem(item)
             node_items[node["id"]] = item
@@ -335,6 +339,8 @@ class CompilerGUI(QMainWindow):
                 draw_node(child)
                 child_x, child_y = positions[child["id"]]
                 child_w, child_h = sizes[child["id"]]
+                child_x = child_x - child_w / 2
+                child_y = child_y - child_h / 2
                 line = self.scene.addLine(
                     x + w / 2, y + h,
                     child_x + child_w / 2, child_y,
