@@ -1,5 +1,5 @@
 import json
-from PyQt5.QtCore import QObject, pyqtSlot, QThread, Qt
+from PyQt5.QtCore import QObject, pyqtSlot, QThread, Qt, QRectF
 from PyQt5.QtGui import QFont, QPalette, QColor, QPainter, QFontMetrics, QPen, QBrush
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QTabWidget, QWidget, QVBoxLayout,
@@ -312,22 +312,19 @@ class CompilerGUI(QMainWindow):
 
             if children:
                 for child in children:
-                    child_node_x, child_node_width= calculate_layout(child, depth + 1)
-                    child_xs.append((child_node_x, child_node_width))
-                min_index = child_xs.index(min(child_xs, key=lambda x: x[0]))
-                max_index = child_xs.index(max(child_xs, key=lambda x: x[0]))
-                node_x = (child_xs[min_index][0] + child_xs[min_index][1] / 2 +
-                          child_xs[max_index][0] + child_xs[max_index][1] / 2) / 2 - width / 2
+                    child_node_x = calculate_layout(child, depth + 1)
+                    child_xs.append(child_node_x)
+                node_x = (min(child_xs) + max(child_xs)) / 2
             else:
-                node_x = calculate_layout.offset
+                node_x = calculate_layout.offset + width / 2
                 calculate_layout.offset += width + x_spacing
 
-            positions[node["id"]] = (node_x + width / 2, depth * (height + y_spacing) + height / 2)
-            return node_x, width
+            center_positions[node["id"]] = (node_x, depth * (height + y_spacing) + height / 2)
+            return node_x
 
         def draw_node(node):
             text = node["root"]
-            x, y = positions[node["id"]]
+            x, y = center_positions[node["id"]]
             w, h = sizes[node["id"]]
             x = x - w / 2
             y = y - h / 2
@@ -337,23 +334,22 @@ class CompilerGUI(QMainWindow):
 
             for child in node.get("children", []):
                 draw_node(child)
-                child_x, child_y = positions[child["id"]]
+                child_x, child_y = center_positions[child["id"]]
                 child_w, child_h = sizes[child["id"]]
-                child_x = child_x - child_w / 2
                 child_y = child_y - child_h / 2
                 line = self.scene.addLine(
                     x + w / 2, y + h,
-                    child_x + child_w / 2, child_y,
+                    child_x, child_y,
                     QPen(Qt.black)
                 )
                 item.children_lines.append(line)
                 item.children_items.append(node_items[child["id"]])
 
-        positions = {}  # 存储每个节点的实际位置
+        center_positions = {}  # 存储每个节点的实际中心位置
         sizes = {}  # 存储每个节点的宽高
         node_items = {}
         font = QFont("Arial", 10)
-        x_spacing, y_spacing = 30, 80
+        x_spacing, y_spacing = 40, 80
 
         assign_ids(ast)
         calculate_layout.offset = 0
@@ -365,6 +361,15 @@ class CompilerGUI(QMainWindow):
         # 缩放和平移设置
         self.ast_view.setRenderHint(QPainter.Antialiasing)
         self.ast_view.fitInView(self.scene.itemsBoundingRect(), Qt.KeepAspectRatio)
+        print(self.scene.itemsBoundingRect())
+        bounding_rect = self.scene.itemsBoundingRect()
+        expanded_rect = QRectF(
+            bounding_rect.x() - 100,
+            bounding_rect.y() - 100,
+            bounding_rect.width() + 200,
+            bounding_rect.height() + 200
+        )
+        self.ast_view.setSceneRect(expanded_rect)  # 增加一些边距
 
     def showTables(self, action, goto):
         def fill_table(widget, data):
