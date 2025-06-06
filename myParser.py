@@ -1,5 +1,7 @@
 import json
 import re
+
+from mySemantic import Semantic
 from tokenType import tokenType_to_terminal, tokenType
 
 ACTION_ACC = 0
@@ -152,6 +154,10 @@ class Parser:
         self.find_firsts()
         self.find_gos()
         self.find_gotos_and_actions()
+
+        self.semantic_quaternation = []
+        self.semantic_error_occur = False
+        self.semantic_error_message = []
 
     def get_id_by_str(self, symbol: str) -> int:
         # 根据symbol获取对应的id，先是终结符，再是非终结符
@@ -536,62 +542,81 @@ class Parser:
         返回：
         - 树形结构，表示语法分析的结果
         """
+
+        # 初始化语义动作执行器
+        mySemantic = Semantic(
+            self.productions, self.non_terminal_symbols, self.terminal_symbols
+        )
+
         stack = []
         item = {"state": 0, "tree": {"root": '#'}}
         stack.append(item)
         self.parse_process_display = []
         self.parse_process_display.append(['步骤', '状态栈', '符号栈', '待规约串', '动作说明'])
+
         pending_string = [cur['prop'].value for cur in lex]
         pending_string = ', '.join(pending_string)
         self.parse_process_display.append(['0', '0', '#', pending_string, '初始状态'])
 
         index = 0
         cnt = 0
+        last_loc = {"row": 0, "col": 0}  # 记录最后一个token位置，用于错误提示
+
         while index < len(lex):
             cnt += 1
             cur = lex[index]
             if cur["prop"] == tokenType.UNKNOWN:
                 print(f"Error: {token} at {cur['loc']}")
                 return {"root": "词法解析失败", "err": cur["loc"]}
+
             token = tokenType_to_terminal(cur["prop"])
             token_id = self.get_id_by_str(token)
+
             if token_id >= self.epsilon_id:
                 print(f"Error: {token} at {cur['loc']}")
                 return {"root": "语法错误/代码不完整，无法解析1", "err": cur["loc"]}
 
-            # 用于展示
             new_display_item = [None] * 5
             new_display_item[0] = str(cnt)
 
             current_state = self.action_table[stack[-1]["state"]]
-            # if stack[-1]["state"] == 0:
-            #     print(self.action_table[0], "-------------")
+
             if token_id not in current_state:
                 print(f"Error: {token} at {cur['loc']}")
+                self.semantic_quaternation = '代码中包含 Error ，中间代码暂不可用'
+                self.semantic_error_occur = True
+                self.semantic_error_message = [f"Error at ({last_loc['row']},{last_loc['col']}): 代码不符合语法规则"]
                 return {"root": "语法错误/代码不完整，无法解析2", "err": cur["loc"]}
 
             current_action_list = current_state[token_id]
-
             first_action = current_action_list[0]
 
             if first_action[0] == ACTION_S:
                 next_state_id = first_action[1]
-                item = {"state": next_state_id, "tree": {"root": token, "children": []}}
+                item = {"state": next_state_id, "tree": {"root": token, "content": cur["content"], "children": []}}
                 stack.append(item)
-                index += 1  # 当前输入串移动到下一个字符
-
+                index += 1
                 new_display_item[4] = f'移进“{token}”, 状态{next_state_id}压栈'
 
             elif first_action[0] == ACTION_R:
+
                 production = self.productions[first_action[1]]
                 production_literal = self.get_str_by_id(production.non_terminal_symbol_id) + '->'
                 children = []
+                cur_content = ""
+                tmp_symbol_stack = []
+
+                from_pos = len(stack) - (0 if production.to_ids == [self.epsilon_id] else len(production.to_ids))
+                for i in range(from_pos, len(stack)):
+                    tmp_symbol_stack.append(stack[i])
+
                 if production.to_ids == [self.epsilon_id]:
                     production_literal += self.get_str_by_id(self.epsilon_id) + ' '
                     children.append({"root": self.get_str_by_id(self.epsilon_id), "children": []})
                 else:
                     for id in production.to_ids:
                         child = stack.pop()["tree"]
+                        cur_content = child.get("content", "") + cur_content
                         children.insert(0, child)
                         production_literal += self.get_str_by_id(id) + ' '
 
@@ -601,29 +626,42 @@ class Parser:
                     "state": next_state_id,
                     "tree": {
                         "root": self.get_str_by_id(production.non_terminal_symbol_id),
+                        "content": cur_content,
                         "children": children,
                     },
                 }
+
+                # 加入语义分析处理
+                if not mySemantic.error_occur:
+                    mySemantic.analyse(first_action[1], last_loc, item, tmp_symbol_stack)
+
                 stack.append(item)
-                new_display_item[4] = f'使用产生式({production_literal[:-1]})进行规约'  # 去除末尾多的空格
+                new_display_item[4] = f'使用产生式({production_literal.strip()})进行规约'
+
             elif first_action[0] == ACTION_ACC:
                 print("Accept")
+                self.semantic_quaternation = mySemantic.getQuaternationTable()
+                self.semantic_error_occur = mySemantic.error_occur
+                self.semantic_error_message = mySemantic.error_msg
                 ret = stack[-1]["tree"]
                 with open("parser_out.json", "w", encoding="utf-8") as f:
                     json.dump(ret, f, indent=4, ensure_ascii=False)
+                with open("quaternation_out.json", "w", encoding="utf-8") as f:
+                    json.dump(self.semantic_quaternation, f, indent=4, ensure_ascii=False)
                 return ret
+
             else:
                 print(f"Error: {token} at {cur['loc']}")
+                self.semantic_quaternation = '代码中包含 Error ，中间代码暂不可用'
+                self.semantic_error_occur = True
+                self.semantic_error_message = [f"Error at ({last_loc['row']},{last_loc['col']}): 代码不符合语法规则"]
                 return {"root": "语法错误/代码不完整，无法解析3", "err": "parser_error"}
 
-            state_stack = [str(item['state']) for item in stack]
-            state_stack = ' '.join(state_stack)
+            last_loc = cur["loc"]  # 更新最新位置
 
-            symbol_stack = [str(item['tree']['root']) for item in stack]
-            symbol_stack = ' '.join(symbol_stack)
-
-            pending_string = [cur['prop'].value for cur in lex[index:]]
-            pending_string = ', '.join(pending_string)
+            state_stack = ' '.join(str(item['state']) for item in stack)
+            symbol_stack = ' '.join(str(item['tree']['root']) for item in stack)
+            pending_string = ', '.join(cur['prop'].value for cur in lex[index:])
 
             new_display_item[1] = state_stack
             new_display_item[2] = symbol_stack

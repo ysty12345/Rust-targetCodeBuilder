@@ -1,3 +1,3 @@
-fn pro(){
-    b = a;
+fn main() {
+    let mut a:i32;
 }

@@ -1,35 +1,77 @@
 {
     "root": "Program",
+    "content": "fnmain(){letmuta:i32;}",
     "children": [
         {
+            "root": "S",
+            "content": "",
+            "children": [
+                {
+                    "root": "None",
+                    "content": "",
+                    "children": [
+                        {
+                            "root": "epsilon",
+                            "children": []
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "root": "DeclList",
+            "content": "fnmain(){letmuta:i32;}",
             "children": [
                 {
                     "root": "Decl",
+                    "content": "fnmain(){letmuta:i32;}",
                     "children": [
                         {
                             "root": "FunctionDecl",
+                            "content": "fnmain(){letmuta:i32;}",
                             "children": [
                                 {
+                                    "root": "M",
+                                    "content": "",
+                                    "children": [
+                                        {
+                                            "root": "None",
+                                            "content": "",
+                                            "children": [
+                                                {
+                                                    "root": "epsilon",
+                                                    "children": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
                                     "root": "FunctionHeader",
+                                    "content": "fnmain()",
                                     "children": [
                                         {
                                             "root": "fn",
+                                            "content": "fn",
                                             "children": []
                                         },
                                         {
                                             "root": "identifier",
+                                            "content": "main",
                                             "children": []
                                         },
                                         {
                                             "root": "(",
+                                            "content": "(",
                                             "children": []
                                         },
                                         {
                                             "root": "ParamList",
+                                            "content": "",
                                             "children": [
                                                 {
                                                     "root": "None",
+                                                    "content": "",
                                                     "children": [
                                                         {
                                                             "root": "epsilon",
@@ -41,70 +83,72 @@
                                         },
                                         {
                                             "root": ")",
+                                            "content": ")",
                                             "children": []
                                         }
                                     ]
                                 },
                                 {
                                     "root": "Block",
+                                    "content": "{letmuta:i32;}",
                                     "children": [
                                         {
                                             "root": "{",
+                                            "content": "{",
                                             "children": []
                                         },
                                         {
                                             "root": "StmtList",
+                                            "content": "letmuta:i32;",
                                             "children": [
                                                 {
                                                     "root": "Stmt",
+                                                    "content": "letmuta:i32;",
                                                     "children": [
                                                         {
-                                                            "root": "AssignStmt",
+                                                            "root": "DeclOnly",
+                                                            "content": "letmuta:i32;",
                                                             "children": [
                                                                 {
-                                                                    "root": "Lvalue",
+                                                                    "root": "let",
+                                                                    "content": "let",
+                                                                    "children": []
+                                                                },
+                                                                {
+                                                                    "root": "VarDeclInner",
+                                                                    "content": "muta",
                                                                     "children": [
                                                                         {
+                                                                            "root": "mut",
+                                                                            "content": "mut",
+                                                                            "children": []
+                                                                        },
+                                                                        {
                                                                             "root": "identifier",
+                                                                            "content": "a",
                                                                             "children": []
                                                                         }
                                                                     ]
                                                                 },
                                                                 {
-                                                                    "root": "=",
+                                                                    "root": ":",
+                                                                    "content": ":",
                                                                     "children": []
                                                                 },
                                                                 {
-                                                                    "root": "Expr",
+                                                                    "root": "Type",
+                                                                    "content": "i32",
                                                                     "children": [
                                                                         {
-                                                                            "root": "AddExpr",
-                                                                            "children": [
-                                                                                {
-                                                                                    "root": "Term",
-                                                                                    "children": [
-                                                                                        {
-                                                                                            "root": "Factor",
-                                                                                            "children": [
-                                                                                                {
-                                                                                                    "root": "Element",
-                                                                                                    "children": [
-                                                                                                        {
-                                                                                                            "root": "identifier",
-                                                                                                            "children": []
-                                                                                                        }
-                                                                                                    ]
-                                                                                                }
-                                                                                            ]
-                                                                                        }
-                                                                                    ]
-                                                                                }
-                                                                            ]
+                                                                            "root": "i32",
+                                                                            "content": "i32",
+                                                                            "children": []
                                                                         }
                                                                     ]
                                                                 },
                                                                 {
                                                                     "root": ";",
+                                                                    "content": ";",
                                                                     "children": []
                                                                 }
                                                             ]
@@ -113,9 +157,11 @@
                                                 },
                                                 {
                                                     "root": "StmtList",
+                                                    "content": "",
                                                     "children": [
                                                         {
                                                             "root": "None",
+                                                            "content": "",
                                                             "children": [
                                                                 {
                                                                     "root": "epsilon",
@@ -129,6 +175,7 @@
                                         },
                                         {
                                             "root": "}",
+                                            "content": "}",
                                             "children": []
                                         }
                                     ]

@@ -10,7 +10,7 @@
     },
     {
         "id": 2,
-        "content": "pro",
+        "content": "main",
         "prop": "identifier",
         "loc": {
             "row": 1,
@@ -23,7 +23,7 @@
         "prop": "l_paren",
         "loc": {
             "row": 1,
-            "col": 7
+            "col": 8
         }
     },
     {
@@ -32,7 +32,7 @@
         "prop": "r_paren",
         "loc": {
             "row": 1,
-            "col": 8
+            "col": 9
         }
     },
     {
@@ -41,13 +41,13 @@
         "prop": "l_brace",
         "loc": {
             "row": 1,
-            "col": 9
+            "col": 11
         }
     },
     {
         "id": 6,
-        "content": "b",
-        "prop": "identifier",
+        "content": "let",
+        "prop": "kw_let",
         "loc": {
             "row": 2,
             "col": 5
@@ -55,11 +55,11 @@
     },
     {
         "id": 7,
-        "content": "=",
-        "prop": "equal",
+        "content": "mut",
+        "prop": "kw_mut",
         "loc": {
             "row": 2,
-            "col": 7
+            "col": 9
         }
     },
     {
@@ -68,20 +68,38 @@
         "prop": "identifier",
         "loc": {
             "row": 2,
-            "col": 9
+            "col": 13
         }
     },
     {
         "id": 9,
-        "content": ";",
-        "prop": "semi",
+        "content": ":",
+        "prop": "colon",
         "loc": {
             "row": 2,
-            "col": 10
+            "col": 14
         }
     },
     {
         "id": 10,
+        "content": "i32",
+        "prop": "kw_i32",
+        "loc": {
+            "row": 2,
+            "col": 15
+        }
+    },
+    {
+        "id": 11,
+        "content": ";",
+        "prop": "semi",
+        "loc": {
+            "row": 2,
+            "col": 18
+        }
+    },
+    {
+        "id": 12,
         "content": "}",
         "prop": "r_brace",
         "loc": {
@@ -90,7 +108,7 @@
         }
     },
     {
-        "id": 11,
+        "id": 13,
         "content": "#",
         "prop": "eof",
         "loc": {

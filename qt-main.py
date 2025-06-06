@@ -104,7 +104,17 @@ class Compiler(QObject):
 
     def process(self, code_str):
         token_list, lexer_success = self.getLex(code_str)
-        parse_result = self.getParse(token_list)
+        try:
+            parse_result = self.getParse(token_list)
+        except Exception as e:
+            parse_result = {
+                "ast": {"root": str(e), "err": "parse_error"},
+                "goto": [["Error"]],
+                "action": [["Error"]],
+                "process": [["Error"]],
+                "semantic_quaternation": [["Error"]],
+            }
+            lexer_success = False
         return json.dumps(
             {
                 "lexer": self.dumpTokenList(token_list),
@@ -128,6 +138,9 @@ class Compiler(QObject):
                 "goto": self.goto_table,
                 "action": self.action_table,
                 "process": self.parser.parse_process_display,
+                "semantic_quaternation": self.parser.semantic_quaternation,
+                "semantic_error_occur": self.parser.semantic_error_occur,
+                "semantic_error_message": self.parser.semantic_error_message,
             }
         else:
             launching = "Parser 正在启动，请稍等。"
@@ -136,6 +149,9 @@ class Compiler(QObject):
                 "goto": [[launching]],
                 "action": [[launching]],
                 "process": [[launching]],
+                "semantic_quaternation": [[launching]],
+                "semantic_error_occur": False,
+                "semantic_error_message": [],
             }
 
     def getLex(self, code_str: str):
@@ -158,6 +174,7 @@ class CompilerGUI(QMainWindow):
         self.ast_graph_tab = QWidget()
         self.table_tab = QWidget()
         self.process_tab = QWidget()
+        self.quad_tab = QWidget()
 
         self.tabs.addTab(self.editor_tab, "源代码编辑")
         self.tabs.addTab(self.lex_tab, "词法分析")
@@ -165,6 +182,7 @@ class CompilerGUI(QMainWindow):
         self.tabs.addTab(self.ast_graph_tab, "语法树图示")
         self.tabs.addTab(self.table_tab, "分析表")
         self.tabs.addTab(self.process_tab, "规约过程")
+        self.tabs.addTab(self.quad_tab, "中间代码")
 
         self.initEditorTab()
         self.initLexTab()
@@ -172,6 +190,7 @@ class CompilerGUI(QMainWindow):
         self.initAstGraphTab()
         self.initTableTab()
         self.initProcessTab()
+        self.initQuadTab()
 
         self.loadFile(filename)
 
@@ -251,12 +270,19 @@ class CompilerGUI(QMainWindow):
         layout.addWidget(self.proc_table)
         self.process_tab.setLayout(layout)
 
+    def initQuadTab(self):
+        layout = QVBoxLayout()
+        self.quad_table = QTableWidget()
+        layout.addWidget(self.quad_table)
+        self.quad_tab.setLayout(layout)
+
     def updateAll(self, data):
         self.showLexResult(data["lexer"])
         self.showAstTree(data["ast"])
         self.showAstGraphTree(data["ast"])
         self.showTables(data["action"], data["goto"])
         self.showProcess(data["process"])
+        self.showQuad(data["semantic_quaternation"])
 
     def showLexResult(self, lexer):
         headers = ["id", "content", "prop", "row", "col"]
@@ -399,6 +425,38 @@ class CompilerGUI(QMainWindow):
 
         beautify_table_widget(self.proc_table)
 
+    def showQuad(self, quad_data):
+        headers = ["地址", "四元式", "op", "arg1", "arg2", "result"]
+        self.quad_table.setColumnCount(len(headers))
+        self.quad_table.setHorizontalHeaderLabels(headers)
+        self.quad_table.setRowCount(len(quad_data) - 1)
+
+        for i, row in enumerate(quad_data[1:]):
+            address = row[0]
+            quad_str = row[1]
+
+            # 尝试解析四元式字符串
+            try:
+                # 去除括号并分割
+                quad_content = quad_str.strip()[1:-1].split(',')
+                op = quad_content[0].strip()
+                arg1 = quad_content[1].strip()
+                arg2 = quad_content[2].strip()
+                result = quad_content[3].strip()
+            except Exception:
+                op = arg1 = arg2 = result = "解析错误"
+
+            display_row = [address, quad_str, op, arg1, arg2, result]
+
+            for j, val in enumerate(display_row):
+                item = QTableWidgetItem(str(val))
+                item.setTextAlignment(Qt.AlignLeft | Qt.AlignTop)
+                item.setFlags(item.flags() ^ Qt.ItemIsEditable)
+                item.setToolTip(str(val))
+                self.quad_table.setItem(i, j, item)
+
+        beautify_table_widget(self.quad_table)
+
 
 if __name__ == "__main__":
     # Initialize the application and the compiler
@@ -407,7 +465,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     setModernStyle(app)
     # 默认文件名
-    default_cfg_filename = "mytest.cfg"
+    default_cfg_filename = "new.cfg"
     default_code_filename = "mytest.c"
 
     # 选择配置文件
