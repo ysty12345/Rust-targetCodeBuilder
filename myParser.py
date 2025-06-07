@@ -639,10 +639,15 @@ class Parser:
                 new_display_item[4] = f'使用产生式({production_literal.strip()})进行规约'
 
             elif first_action[0] == ACTION_ACC:
-                print("Accept")
+                print("语法分析结果: Accept")
                 self.semantic_quaternation = mySemantic.getQuaternationTable()
                 self.semantic_error_occur = mySemantic.error_occur
                 self.semantic_error_message = mySemantic.error_msg
+
+                print(f"语义分析结果: {not self.semantic_error_occur}")
+                if self.semantic_error_occur:
+                    print(f"语义分析错误信息: {self.semantic_error_message}")
+
                 ret = stack[-1]["tree"]
                 with open("parser_out.json", "w", encoding="utf-8") as f:
                     json.dump(ret, f, indent=4, ensure_ascii=False)

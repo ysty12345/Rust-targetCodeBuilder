@@ -1,6 +1,6 @@
 {
     "root": "Program",
-    "content": "fnmain(){letmuta:i32;}",
+    "content": "fnmain(muta:i32,mutb:i32){letmutb:i32;}",
     "children": [
         {
             "root": "S",
@@ -20,18 +20,18 @@
         },
         {
             "root": "DeclList",
-            "content": "fnmain(){letmuta:i32;}",
+            "content": "fnmain(muta:i32,mutb:i32){letmutb:i32;}",
             "children": [
                 {
                     "root": "Decl",
-                    "content": "fnmain(){letmuta:i32;}",
+                    "content": "fnmain(muta:i32,mutb:i32){letmutb:i32;}",
                     "children": [
                         {
                             "root": "FunctionDecl",
-                            "content": "fnmain(){letmuta:i32;}",
+                            "content": "fnmain(muta:i32,mutb:i32){letmutb:i32;}",
                             "children": [
                                 {
-                                    "root": "M",
+                                    "root": "P",
                                     "content": "",
                                     "children": [
                                         {
@@ -48,7 +48,7 @@
                                 },
                                 {
                                     "root": "FunctionHeader",
-                                    "content": "fnmain()",
+                                    "content": "fnmain(muta:i32,mutb:i32)",
                                     "children": [
                                         {
                                             "root": "fn",
@@ -67,15 +67,108 @@
                                         },
                                         {
                                             "root": "ParamList",
-                                            "content": "",
+                                            "content": "muta:i32,mutb:i32",
                                             "children": [
                                                 {
-                                                    "root": "None",
-                                                    "content": "",
+                                                    "root": "Param",
+                                                    "content": "muta:i32",
                                                     "children": [
                                                         {
-                                                            "root": "epsilon",
+                                                            "root": "VarDeclInner",
+                                                            "content": "muta",
+                                                            "children": [
+                                                                {
+                                                                    "root": "mut",
+                                                                    "content": "mut",
+                                                                    "children": []
+                                                                },
+                                                                {
+                                                                    "root": "identifier",
+                                                                    "content": "a",
+                                                                    "children": []
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "root": ":",
+                                                            "content": ":",
                                                             "children": []
+                                                        },
+                                                        {
+                                                            "root": "Type",
+                                                            "content": "i32",
+                                                            "children": [
+                                                                {
+                                                                    "root": "i32",
+                                                                    "content": "i32",
+                                                                    "children": []
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "root": "ParamListTail",
+                                                    "content": ",mutb:i32",
+                                                    "children": [
+                                                        {
+                                                            "root": ",",
+                                                            "content": ",",
+                                                            "children": []
+                                                        },
+                                                        {
+                                                            "root": "Param",
+                                                            "content": "mutb:i32",
+                                                            "children": [
+                                                                {
+                                                                    "root": "VarDeclInner",
+                                                                    "content": "mutb",
+                                                                    "children": [
+                                                                        {
+                                                                            "root": "mut",
+                                                                            "content": "mut",
+                                                                            "children": []
+                                                                        },
+                                                                        {
+                                                                            "root": "identifier",
+                                                                            "content": "b",
+                                                                            "children": []
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "root": ":",
+                                                                    "content": ":",
+                                                                    "children": []
+                                                                },
+                                                                {
+                                                                    "root": "Type",
+                                                                    "content": "i32",
+                                                                    "children": [
+                                                                        {
+                                                                            "root": "i32",
+                                                                            "content": "i32",
+                                                                            "children": []
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "root": "ParamListTail",
+                                                            "content": "",
+                                                            "children": [
+                                                                {
+                                                                    "root": "None",
+                                                                    "content": "",
+                                                                    "children": [
+                                                                        {
+                                                                            "root": "epsilon",
+                                                                            "children": []
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
                                                         }
                                                     ]
                                                 }
@@ -90,7 +183,7 @@
                                 },
                                 {
                                     "root": "Block",
-                                    "content": "{letmuta:i32;}",
+                                    "content": "{letmutb:i32;}",
                                     "children": [
                                         {
                                             "root": "{",
@@ -99,15 +192,15 @@
                                         },
                                         {
                                             "root": "StmtList",
-                                            "content": "letmuta:i32;",
+                                            "content": "letmutb:i32;",
                                             "children": [
                                                 {
                                                     "root": "Stmt",
-                                                    "content": "letmuta:i32;",
+                                                    "content": "letmutb:i32;",
                                                     "children": [
                                                         {
                                                             "root": "DeclOnly",
-                                                            "content": "letmuta:i32;",
+                                                            "content": "letmutb:i32;",
                                                             "children": [
                                                                 {
                                                                     "root": "let",
@@ -116,7 +209,7 @@
                                                                 },
                                                                 {
                                                                     "root": "VarDeclInner",
-                                                                    "content": "muta",
+                                                                    "content": "mutb",
                                                                     "children": [
                                                                         {
                                                                             "root": "mut",
@@ -125,7 +218,7 @@
                                                                         },
                                                                         {
                                                                             "root": "identifier",
-                                                                            "content": "a",
+                                                                            "content": "b",
                                                                             "children": []
                                                                         }
                                                                     ]

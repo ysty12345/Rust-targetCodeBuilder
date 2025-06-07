@@ -468,19 +468,23 @@ if __name__ == "__main__":
     default_cfg_filename = "new.cfg"
     default_code_filename = "mytest.c"
 
-    # 选择配置文件
-    cfg_filename, _ = QFileDialog.getOpenFileName(
-        None, "选择文法配置文件", default_cfg_filename, "Config Files (*.cfg);;All Files (*)"
-    )
-    if not cfg_filename:
+    if 1:
         cfg_filename = default_cfg_filename
-
-    # 选择代码文件
-    code_filename, _ = QFileDialog.getOpenFileName(
-        None, "选择代码文件", default_code_filename, "C Files (*.c);;All Files (*)"
-    )
-    if not code_filename:
         code_filename = default_code_filename
+    else:
+        # 选择配置文件
+        cfg_filename, _ = QFileDialog.getOpenFileName(
+            None, "选择文法配置文件", default_cfg_filename, "Config Files (*.cfg);;All Files (*)"
+        )
+        if not cfg_filename:
+            cfg_filename = default_cfg_filename
+
+        # 选择代码文件
+        code_filename, _ = QFileDialog.getOpenFileName(
+            None, "选择代码文件", default_code_filename, "C Files (*.c);;All Files (*)"
+        )
+        if not code_filename:
+            code_filename = default_code_filename
 
     # 启动编译器和GUI
     compiler = Compiler(cfg_filename)

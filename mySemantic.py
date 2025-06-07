@@ -1,12 +1,13 @@
 class Attribute:
     def __init__(self):
+        self.identifier = ""  # 标识符
         self.type = ""  # 值类型 int word tmp_word
         self.place = None  # 存储位置
         self.quad = None  # 下一条四元式位置
         self.truelist = []  # true条件跳转目标
         self.falselist = []  # false条件跳转目标
         self.nextlist = []  # 顺序执行下一目标
-        self.queue = []  # 队列（用于函数参数）
+        self.param_list = []  # 队列（用于函数参数）
         self.has_return = False  # 是否有一个一定能执行到的return
 
     def __repr__(self):
@@ -141,60 +142,121 @@ class Semantic:
         prod_str = self.get_str_by_production_id(production_id)
         to_ids = self.productions[production_id].to_ids
         to_strs = [self.get_str_by_id(i) for i in to_ids]
-        print(prod_str)
+
         if prod_str == "Program":
+            # Program -> DeclList | None
             pass
         elif prod_str == "S":
+            # S -> None
             self.emit("j", "-", "-", "-")
+        elif prod_str == "P":
+            # P → None
+            new_proc = Process(start_address=len(self.quaternion_table) + self.start_address)  # 当前中间代码地址
+            self.process_table.append(new_proc)
+
+            attr = Attribute()
+            attr.quad = len(self.quaternion_table)  # 保存函数入口四元式索引（用于后续设置 main）
+            attr.place = len(self.process_table) - 1  # 在 process_table 中的下标
+            item["attribute"] = attr
         elif prod_str == "FunctionHeader":
             # FunctionHeader -> fn identifier ( ParamList ) | fn identifier ( ParamList ) -> Type
             func_name = tmp_symbol_stack[1]["tree"]["content"]
             ret_type = tmp_symbol_stack[-1]["tree"]["content"] if to_strs[-2] == "->" else "void"
+            # 一定要在函数定义前创建一个 Process 对象
+            func_obj = self.process_table[-1]
 
             if self.checkup_process(func_name):
                 self.raise_error("Error", loc, f"函数 {func_name} 重定义")
                 return
-            # 在当前中间代码位置创建函数，地址待回填
-            new_proc = Process()
-            new_proc.name = func_name
-            new_proc.return_type = ret_type
-            self.process_table.append(new_proc)
+
+            func_obj.name = func_name
+            func_obj.return_type = ret_type
 
             attr = Attribute()
-            attr.place = len(self.process_table) - 1  # 索引在 process_table 中
+            attr.place = len(self.process_table) - 1  # 在 process_table 中的下标
             attr.type = ret_type
             item["attribute"] = attr
-
         elif prod_str == "FunctionDecl":
-            # FunctionDecl → M FunctionHeader Block
-            M_attr = tmp_symbol_stack[0]["attribute"]
+            # FunctionDecl -> P FunctionHeader Block
             func_attr = tmp_symbol_stack[1]["attribute"]
-
+            proc_index = func_attr.place
+            func_obj = self.process_table[proc_index]
             try:
                 block_attr = tmp_symbol_stack[2]["attribute"]
                 block_nextlist = block_attr.nextlist
-                self.backpatch(block_nextlist, len(self.quaternion_table))
+                self.backpatch(block_nextlist, len(self.quaternion_table))  # 回填 block 结尾跳转地址
             except KeyError:
                 pass
-
-            func_obj = self.process_table[func_attr.place]
             if func_obj.return_type == "void":
                 self.emit("ret", "-", "-", "-")
-            # 回填函数地址
-            func_obj.start_address = M_attr.quad + self.start_address
-            # 回填主程序入口
-            if func_obj.name == "main":
-                self.quaternion_table[0].tar = func_obj.start_address
 
+            # 设置程序入口
+            if func_obj.name == "main":
+                # 保证四元式表第一个为 j main
+                self.quaternion_table[0].tar = str(func_obj.start_address)
         elif prod_str == "DeclOnly":
             # let VarDeclInner : Type ;
-            var_name = tmp_symbol_stack[1]["tree"]["content"]
+            var_name = tmp_symbol_stack[1]["attribute"].identifier
             var_type = tmp_symbol_stack[-2]["tree"]["content"] if len(to_strs) == 5 else "i32"
+
             if self.checkup_word(var_name):
                 self.raise_error("Error", loc, f"变量{var_name}重定义")
             new_word = Word(name=var_name)
             new_word.type = var_type
             self.create_word(new_word)
+        elif prod_str == "VarDeclInner":
+            # VarDeclInner -> mut identifier
+            var_name = tmp_symbol_stack[1]["tree"]["content"]
+            attr = Attribute()
+            attr.identifier = var_name  # 暂存参数名
+            item["attribute"] = attr
+        elif prod_str == "Param":
+            # Param -> VarDeclInner : Type
+            var_attr = tmp_symbol_stack[0]["attribute"]
+            param_name = var_attr.identifier
+            param_type = tmp_symbol_stack[-1]["tree"]["content"]
+
+            word = Word(name=param_name)
+            word.type = param_type
+            self.create_word(word) # 在函数中的变量表中增加一项
+
+            attr = Attribute()
+            attr.word = word  # 暂存 Word 对象
+            item["attribute"] = attr
+        elif prod_str == "ParamList":
+            # ParamList -> Param ParamListTail | None
+            if to_strs[0] == "Param":
+                param_word = tmp_symbol_stack[0]["attribute"].word
+                param_list_tail = tmp_symbol_stack[1]["attribute"].param_list \
+                    if "attribute" in tmp_symbol_stack[1] else []
+
+                full_param_list = [param_word] + param_list_tail
+
+                attr = Attribute()
+                attr.param_list = full_param_list
+                item["attribute"] = attr
+                # 填入当前函数（Process）表
+                self.process_table[-1].param = full_param_list
+                self.process_table[-1].words_table.extend(full_param_list)
+            elif to_strs[0] == "None":
+                attr = Attribute()
+                attr.param_list = []
+                item["attribute"] = attr
+        elif prod_str == "ParamListTail":
+            # ParamListTail -> , Param ParamListTail | None
+            if to_strs[0] == ",":
+                param_word = tmp_symbol_stack[1]["attribute"].word
+                param_list_tail = tmp_symbol_stack[2]["attribute"].param_list \
+                    if "attribute" in tmp_symbol_stack[2] else []
+
+                full_param_list = [param_word] + param_list_tail
+                attr = Attribute()
+                attr.param_list = full_param_list
+                item["attribute"] = attr
+            elif to_strs[0] == "None":
+                attr = Attribute()
+                attr.param_list = []
+                item["attribute"] = attr
         elif prod_str == "M":
             # M -> None
             tmp = Attribute()
@@ -208,12 +270,7 @@ class Semantic:
 
         if prod_str == "Program":
             # Program -> DeclList | None
-            if to_strs[0] == "DeclList":
-                # Program包含声明列表，递归处理
-                pass
-            elif to_strs[0] == "None":
-                # 空程序，不产生中间代码
-                pass
+            pass
 
         elif prod_str == "DeclList":
             # DeclList -> Decl DeclList | Decl
@@ -229,7 +286,7 @@ class Semantic:
             pass
 
         elif prod_str == "FunctionDecl":
-            # FunctionDecl -> FunctionHeader Block
+            # FunctionDecl -> P FunctionHeader Block
             pass
 
         elif prod_str == "FunctionHeader":
@@ -264,7 +321,7 @@ class Semantic:
         elif prod_str == "VarDeclInner":
             # VarDeclInner -> mut identifier
             pass
-
+        # ------------------------------------------------------------------------------------------
         elif prod_str == "Block":
             # Block -> { StmtList }
             pass

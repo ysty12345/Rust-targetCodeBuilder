@@ -28,8 +28,8 @@
     },
     {
         "id": 4,
-        "content": ")",
-        "prop": "r_paren",
+        "content": "mut",
+        "prop": "kw_mut",
         "loc": {
             "row": 1,
             "col": 9
@@ -37,15 +37,96 @@
     },
     {
         "id": 5,
-        "content": "{",
-        "prop": "l_brace",
+        "content": "a",
+        "prop": "identifier",
         "loc": {
             "row": 1,
-            "col": 11
+            "col": 13
         }
     },
     {
         "id": 6,
+        "content": ":",
+        "prop": "colon",
+        "loc": {
+            "row": 1,
+            "col": 14
+        }
+    },
+    {
+        "id": 7,
+        "content": "i32",
+        "prop": "kw_i32",
+        "loc": {
+            "row": 1,
+            "col": 16
+        }
+    },
+    {
+        "id": 8,
+        "content": ",",
+        "prop": "comma",
+        "loc": {
+            "row": 1,
+            "col": 19
+        }
+    },
+    {
+        "id": 9,
+        "content": "mut",
+        "prop": "kw_mut",
+        "loc": {
+            "row": 1,
+            "col": 21
+        }
+    },
+    {
+        "id": 10,
+        "content": "b",
+        "prop": "identifier",
+        "loc": {
+            "row": 1,
+            "col": 25
+        }
+    },
+    {
+        "id": 11,
+        "content": ":",
+        "prop": "colon",
+        "loc": {
+            "row": 1,
+            "col": 26
+        }
+    },
+    {
+        "id": 12,
+        "content": "i32",
+        "prop": "kw_i32",
+        "loc": {
+            "row": 1,
+            "col": 28
+        }
+    },
+    {
+        "id": 13,
+        "content": ")",
+        "prop": "r_paren",
+        "loc": {
+            "row": 1,
+            "col": 31
+        }
+    },
+    {
+        "id": 14,
+        "content": "{",
+        "prop": "l_brace",
+        "loc": {
+            "row": 1,
+            "col": 33
+        }
+    },
+    {
+        "id": 15,
         "content": "let",
         "prop": "kw_let",
         "loc": {
@@ -54,7 +135,7 @@
         }
     },
     {
-        "id": 7,
+        "id": 16,
         "content": "mut",
         "prop": "kw_mut",
         "loc": {
@@ -63,8 +144,8 @@
         }
     },
     {
-        "id": 8,
-        "content": "a",
+        "id": 17,
+        "content": "b",
         "prop": "identifier",
         "loc": {
             "row": 2,
@@ -72,7 +153,7 @@
         }
     },
     {
-        "id": 9,
+        "id": 18,
         "content": ":",
         "prop": "colon",
         "loc": {
@@ -81,7 +162,7 @@
         }
     },
     {
-        "id": 10,
+        "id": 19,
         "content": "i32",
         "prop": "kw_i32",
         "loc": {
@@ -90,7 +171,7 @@
         }
     },
     {
-        "id": 11,
+        "id": 20,
         "content": ";",
         "prop": "semi",
         "loc": {
@@ -99,7 +180,7 @@
         }
     },
     {
-        "id": 12,
+        "id": 21,
         "content": "}",
         "prop": "r_brace",
         "loc": {
@@ -108,7 +189,7 @@
         }
     },
     {
-        "id": 13,
+        "id": 22,
         "content": "#",
         "prop": "eof",
         "loc": {
