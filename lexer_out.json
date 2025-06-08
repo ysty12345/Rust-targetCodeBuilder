@@ -145,7 +145,7 @@
     },
     {
         "id": 17,
-        "content": "b",
+        "content": "c",
         "prop": "identifier",
         "loc": {
             "row": 2,
@@ -181,19 +181,109 @@
     },
     {
         "id": 21,
-        "content": "}",
-        "prop": "r_brace",
+        "content": "c",
+        "prop": "identifier",
         "loc": {
             "row": 3,
-            "col": 1
+            "col": 5
         }
     },
     {
         "id": 22,
+        "content": "=",
+        "prop": "equal",
+        "loc": {
+            "row": 3,
+            "col": 7
+        }
+    },
+    {
+        "id": 23,
+        "content": "a",
+        "prop": "identifier",
+        "loc": {
+            "row": 3,
+            "col": 9
+        }
+    },
+    {
+        "id": 24,
+        "content": "+",
+        "prop": "plus",
+        "loc": {
+            "row": 3,
+            "col": 11
+        }
+    },
+    {
+        "id": 25,
+        "content": "b",
+        "prop": "identifier",
+        "loc": {
+            "row": 3,
+            "col": 13
+        }
+    },
+    {
+        "id": 26,
+        "content": "*",
+        "prop": "star",
+        "loc": {
+            "row": 3,
+            "col": 15
+        }
+    },
+    {
+        "id": 27,
+        "content": "c",
+        "prop": "identifier",
+        "loc": {
+            "row": 3,
+            "col": 17
+        }
+    },
+    {
+        "id": 28,
+        "content": "+",
+        "prop": "plus",
+        "loc": {
+            "row": 3,
+            "col": 19
+        }
+    },
+    {
+        "id": 29,
+        "content": "1",
+        "prop": "integer_constant",
+        "loc": {
+            "row": 3,
+            "col": 21
+        }
+    },
+    {
+        "id": 30,
+        "content": ";",
+        "prop": "semi",
+        "loc": {
+            "row": 3,
+            "col": 22
+        }
+    },
+    {
+        "id": 31,
+        "content": "}",
+        "prop": "r_brace",
+        "loc": {
+            "row": 4,
+            "col": 1
+        }
+    },
+    {
+        "id": 32,
         "content": "#",
         "prop": "eof",
         "loc": {
-            "row": 4,
+            "row": 5,
             "col": 1
         }
     }

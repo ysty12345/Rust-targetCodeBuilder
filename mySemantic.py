@@ -2,13 +2,15 @@ class Attribute:
     def __init__(self):
         self.identifier = ""  # 标识符
         self.type = ""  # 值类型 int word tmp_word
-        self.place = None  # 存储位置
+        self.place = None  # 存储位置或临时变量名字
         self.quad = None  # 下一条四元式位置
         self.truelist = []  # true条件跳转目标
         self.falselist = []  # false条件跳转目标
         self.nextlist = []  # 顺序执行下一目标
-        self.param_list = []  # 队列（用于函数参数）
+        self.param_list = []  # 形参列表
+        self.arg_list = []  # 实参列表
         self.has_return = False  # 是否有一个一定能执行到的return
+        self.op = ""  # 操作符（如加减乘除等）
 
     def __repr__(self):
         return f"<Attribute Object (Type:{self.type}, Place:{self.place}, Truelist:{self.truelist}, Falselist:{self.falselist}, Nextlist:{self.nextlist}, Quad:{self.quad})>"
@@ -42,6 +44,7 @@ class Process:
         self.actual_returns = []
         self.start_address = start_address
         self.words_table = [Word()]
+        self.tmp_words_table = []
         self.param = []
 
     def __repr__(self):
@@ -123,6 +126,27 @@ class Semantic:
         words_table = self.process_table[-1].words_table
         word.id = len(words_table)
         words_table.append(word)
+
+    def new_temp(self):
+        """
+        生成临时变量并加入当前函数的 tmp_words_table
+        """
+        tmp_words_table = self.process_table[-1].tmp_words_table
+        temp_count = len(tmp_words_table)
+        while True:
+            temp_name = f"__T{temp_count}"
+            temp_count += 1
+            # 检查当前函数作用域中的局部变量是否已有此名
+            if not self.checkup_word(temp_name):
+                break
+
+        temp_word = Word(name=temp_name)
+        temp_word.id = len(tmp_words_table)
+        temp_word.type = "i32"
+
+        # 加入临时变量表（当前函数）
+        self.process_table[-1].tmp_words_table.append(temp_word)
+        return temp_name
 
     def emit(self, op, arg1, arg2, result):
         self.quaternion_table.append(Quaternion(op, arg1, arg2, result))
@@ -257,6 +281,119 @@ class Semantic:
                 attr = Attribute()
                 attr.param_list = []
                 item["attribute"] = attr
+        elif prod_str == "Expr":
+            # Expr -> Expr CmpOp AddExpr | AddExpr
+            if len(to_strs) == 1:
+                item["attribute"] = tmp_symbol_stack[0]["attribute"]
+            else:
+                lhs = tmp_symbol_stack[0]["attribute"]
+                op = tmp_symbol_stack[1]["attribute"].op
+                rhs = tmp_symbol_stack[2]["attribute"]
+
+                temp_var = self.new_temp()
+                self.emit(op, lhs.place, rhs.place, temp_var)
+
+                attr = Attribute()
+                attr.place = temp_var
+                item["attribute"] = attr
+        elif prod_str == "AddExpr":
+            # AddExpr -> AddExpr AddOp Term | Term
+            if len(to_strs) == 1:
+                item["attribute"] = tmp_symbol_stack[0]["attribute"]
+            else:
+                lhs = tmp_symbol_stack[0]["attribute"]
+                op = tmp_symbol_stack[1]["attribute"].op
+                rhs = tmp_symbol_stack[2]["attribute"]
+
+                temp_var = self.new_temp()
+                self.emit(op, lhs.place, rhs.place, temp_var)
+
+                attr = Attribute()
+                attr.place = temp_var
+                item["attribute"] = attr
+        elif prod_str == "Term":
+            # Term -> Term MulOp Factor | Factor
+            if len(to_strs) == 1:
+                item["attribute"] = tmp_symbol_stack[0]["attribute"]
+            else:
+                lhs = tmp_symbol_stack[0]["attribute"]
+                op = tmp_symbol_stack[1]["attribute"].op
+                rhs = tmp_symbol_stack[2]["attribute"]
+
+                temp_var = self.new_temp()
+                self.emit(op, lhs.place, rhs.place, temp_var)
+
+                attr = Attribute()
+                attr.place = temp_var
+                item["attribute"] = attr
+        elif prod_str == "Factor":
+            # Factor -> Element
+            item["attribute"] = tmp_symbol_stack[0]["attribute"]
+        elif prod_str == "Element":
+            # Element -> integer_constant | identifier | ( Expr ) | identifier ( ArgList )
+            if len(to_strs) == 1:
+                content = tmp_symbol_stack[0]["tree"]["content"]
+                attr = Attribute()
+                attr.place = content  # 常量或变量名
+                item["attribute"] = attr
+            elif to_strs[0] == "(":
+                # ( Expr )
+                item["attribute"] = tmp_symbol_stack[1]["attribute"]
+            else:
+                # identifier ( ArgList )
+                func_name = tmp_symbol_stack[0]["tree"]["content"]
+                args_attr = tmp_symbol_stack[2]["attribute"]
+                arg_places = args_attr.arg_list
+
+                for i, arg in enumerate(arg_places):
+                    self.emit("arg", "-", "-", arg)
+
+                ret_temp = self.new_temp()
+                self.emit("call", func_name, len(arg_places), ret_temp)
+
+                attr = Attribute()
+                attr.place = ret_temp
+                item["attribute"] = attr
+        elif prod_str == "ArgList":
+            # ArgList -> Expr ArgListTail | None
+            if to_strs[0] == "Expr":
+                head = tmp_symbol_stack[0]["attribute"].place
+                tail = tmp_symbol_stack[1]["attribute"].arg_list if "attribute" in tmp_symbol_stack[1] else []
+                attr = Attribute()
+                attr.arg_list = [head] + tail
+                item["attribute"] = attr
+            else:
+                attr = Attribute()
+                attr.arg_list = []
+                item["attribute"] = attr
+        elif prod_str == "ArgListTail":
+            # ArgListTail -> , Expr ArgListTail | None
+            if to_strs[0] == ",":
+                head = tmp_symbol_stack[1]["attribute"].place
+                tail = tmp_symbol_stack[2]["attribute"].arg_list if "attribute" in tmp_symbol_stack[2] else []
+                attr = Attribute()
+                attr.arg_list = [head] + tail
+                item["attribute"] = attr
+            else:
+                attr = Attribute()
+                attr.arg_list = []
+                item["attribute"] = attr
+        elif prod_str == "CmpOp":
+            # CmpOp -> < | <= | > | >= | == | !=
+            attr = Attribute()
+            attr.op = tmp_symbol_stack[0]["tree"]["content"]
+            item["attribute"] = attr
+        elif prod_str == "AddOp":
+            # AddOp -> + | -
+            attr = Attribute()
+            attr.op = tmp_symbol_stack[0]["tree"]["content"]
+            item["attribute"] = attr
+        elif prod_str == "MulOp":
+            # MulOp -> * | /
+            attr = Attribute()
+            attr.op = tmp_symbol_stack[0]["tree"]["content"]
+            item["attribute"] = attr
+
         elif prod_str == "M":
             # M -> None
             tmp = Attribute()
@@ -373,18 +510,10 @@ class Semantic:
             # ReturnStmt -> return ; | return Expr ;
             pass
 
-        elif prod_str == "BreakStmt":
-            # BreakStmt -> break ;
-            pass
-
-        elif prod_str == "ContinueStmt":
-            # ContinueStmt -> continue ;
-            pass
-
         elif prod_str == "Lvalue":
             # Lvalue -> identifier
             pass
-
+        # ------------------------------------------------------------------------------------------
         elif prod_str == "Expr":
             # Expr -> Expr CmpOp AddExpr | AddExpr
             pass

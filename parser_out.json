@@ -1,6 +1,6 @@
 {
     "root": "Program",
-    "content": "fnmain(muta:i32,mutb:i32){letmutb:i32;}",
+    "content": "fnmain(muta:i32,mutb:i32){letmutc:i32;c=a+b*c+1;}",
     "children": [
         {
             "root": "S",
@@ -20,15 +20,15 @@
         },
         {
             "root": "DeclList",
-            "content": "fnmain(muta:i32,mutb:i32){letmutb:i32;}",
+            "content": "fnmain(muta:i32,mutb:i32){letmutc:i32;c=a+b*c+1;}",
             "children": [
                 {
                     "root": "Decl",
-                    "content": "fnmain(muta:i32,mutb:i32){letmutb:i32;}",
+                    "content": "fnmain(muta:i32,mutb:i32){letmutc:i32;c=a+b*c+1;}",
                     "children": [
                         {
                             "root": "FunctionDecl",
-                            "content": "fnmain(muta:i32,mutb:i32){letmutb:i32;}",
+                            "content": "fnmain(muta:i32,mutb:i32){letmutc:i32;c=a+b*c+1;}",
                             "children": [
                                 {
                                     "root": "P",
@@ -183,7 +183,7 @@
                                 },
                                 {
                                     "root": "Block",
-                                    "content": "{letmutb:i32;}",
+                                    "content": "{letmutc:i32;c=a+b*c+1;}",
                                     "children": [
                                         {
                                             "root": "{",
@@ -192,15 +192,15 @@
                                         },
                                         {
                                             "root": "StmtList",
-                                            "content": "letmutb:i32;",
+                                            "content": "letmutc:i32;c=a+b*c+1;",
                                             "children": [
                                                 {
                                                     "root": "Stmt",
-                                                    "content": "letmutb:i32;",
+                                                    "content": "letmutc:i32;",
                                                     "children": [
                                                         {
                                                             "root": "DeclOnly",
-                                                            "content": "letmutb:i32;",
+                                                            "content": "letmutc:i32;",
                                                             "children": [
                                                                 {
                                                                     "root": "let",
@@ -209,7 +209,7 @@
                                                                 },
                                                                 {
                                                                     "root": "VarDeclInner",
-                                                                    "content": "mutb",
+                                                                    "content": "mutc",
                                                                     "children": [
                                                                         {
                                                                             "root": "mut",
@@ -218,7 +218,7 @@
                                                                         },
                                                                         {
                                                                             "root": "identifier",
-                                                                            "content": "b",
+                                                                            "content": "c",
                                                                             "children": []
                                                                         }
                                                                     ]
@@ -250,15 +250,203 @@
                                                 },
                                                 {
                                                     "root": "StmtList",
-                                                    "content": "",
+                                                    "content": "c=a+b*c+1;",
                                                     "children": [
                                                         {
-                                                            "root": "None",
+                                                            "root": "Stmt",
+                                                            "content": "c=a+b*c+1;",
+                                                            "children": [
+                                                                {
+                                                                    "root": "AssignStmt",
+                                                                    "content": "c=a+b*c+1;",
+                                                                    "children": [
+                                                                        {
+                                                                            "root": "Lvalue",
+                                                                            "content": "c",
+                                                                            "children": [
+                                                                                {
+                                                                                    "root": "identifier",
+                                                                                    "content": "c",
+                                                                                    "children": []
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "root": "=",
+                                                                            "content": "=",
+                                                                            "children": []
+                                                                        },
+                                                                        {
+                                                                            "root": "Expr",
+                                                                            "content": "a+b*c+1",
+                                                                            "children": [
+                                                                                {
+                                                                                    "root": "AddExpr",
+                                                                                    "content": "a+b*c+1",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "root": "AddExpr",
+                                                                                            "content": "a+b*c",
+                                                                                            "children": [
+                                                                                                {
+                                                                                                    "root": "AddExpr",
+                                                                                                    "content": "a",
+                                                                                                    "children": [
+                                                                                                        {
+                                                                                                            "root": "Term",
+                                                                                                            "content": "a",
+                                                                                                            "children": [
+                                                                                                                {
+                                                                                                                    "root": "Factor",
+                                                                                                                    "content": "a",
+                                                                                                                    "children": [
+                                                                                                                        {
+                                                                                                                            "root": "Element",
+                                                                                                                            "content": "a",
+                                                                                                                            "children": [
+                                                                                                                                {
+                                                                                                                                    "root": "identifier",
+                                                                                                                                    "content": "a",
+                                                                                                                                    "children": []
+                                                                                                                                }
+                                                                                                                            ]
+                                                                                                                        }
+                                                                                                                    ]
+                                                                                                                }
+                                                                                                            ]
+                                                                                                        }
+                                                                                                    ]
+                                                                                                },
+                                                                                                {
+                                                                                                    "root": "AddOp",
+                                                                                                    "content": "+",
+                                                                                                    "children": [
+                                                                                                        {
+                                                                                                            "root": "+",
+                                                                                                            "content": "+",
+                                                                                                            "children": []
+                                                                                                        }
+                                                                                                    ]
+                                                                                                },
+                                                                                                {
+                                                                                                    "root": "Term",
+                                                                                                    "content": "b*c",
+                                                                                                    "children": [
+                                                                                                        {
+                                                                                                            "root": "Term",
+                                                                                                            "content": "b",
+                                                                                                            "children": [
+                                                                                                                {
+                                                                                                                    "root": "Factor",
+                                                                                                                    "content": "b",
+                                                                                                                    "children": [
+                                                                                                                        {
+                                                                                                                            "root": "Element",
+                                                                                                                            "content": "b",
+                                                                                                                            "children": [
+                                                                                                                                {
+                                                                                                                                    "root": "identifier",
+                                                                                                                                    "content": "b",
+                                                                                                                                    "children": []
+                                                                                                                                }
+                                                                                                                            ]
+                                                                                                                        }
+                                                                                                                    ]
+                                                                                                                }
+                                                                                                            ]
+                                                                                                        },
+                                                                                                        {
+                                                                                                            "root": "MulOp",
+                                                                                                            "content": "*",
+                                                                                                            "children": [
+                                                                                                                {
+                                                                                                                    "root": "*",
+                                                                                                                    "content": "*",
+                                                                                                                    "children": []
+                                                                                                                }
+                                                                                                            ]
+                                                                                                        },
+                                                                                                        {
+                                                                                                            "root": "Factor",
+                                                                                                            "content": "c",
+                                                                                                            "children": [
+                                                                                                                {
+                                                                                                                    "root": "Element",
+                                                                                                                    "content": "c",
+                                                                                                                    "children": [
+                                                                                                                        {
+                                                                                                                            "root": "identifier",
+                                                                                                                            "content": "c",
+                                                                                                                            "children": []
+                                                                                                                        }
+                                                                                                                    ]
+                                                                                                                }
+                                                                                                            ]
+                                                                                                        }
+                                                                                                    ]
+                                                                                                }
+                                                                                            ]
+                                                                                        },
+                                                                                        {
+                                                                                            "root": "AddOp",
+                                                                                            "content": "+",
+                                                                                            "children": [
+                                                                                                {
+                                                                                                    "root": "+",
+                                                                                                    "content": "+",
+                                                                                                    "children": []
+                                                                                                }
+                                                                                            ]
+                                                                                        },
+                                                                                        {
+                                                                                            "root": "Term",
+                                                                                            "content": "1",
+                                                                                            "children": [
+                                                                                                {
+                                                                                                    "root": "Factor",
+                                                                                                    "content": "1",
+                                                                                                    "children": [
+                                                                                                        {
+                                                                                                            "root": "Element",
+                                                                                                            "content": "1",
+                                                                                                            "children": [
+                                                                                                                {
+                                                                                                                    "root": "integer_constant",
+                                                                                                                    "content": "1",
+                                                                                                                    "children": []
+                                                                                                                }
+                                                                                                            ]
+                                                                                                        }
+                                                                                                    ]
+                                                                                                }
+                                                                                            ]
+                                                                                        }
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "root": ";",
+                                                                            "content": ";",
+                                                                            "children": []
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "root": "StmtList",
                                                             "content": "",
                                                             "children": [
                                                                 {
-                                                                    "root": "epsilon",
-                                                                    "children": []
+                                                                    "root": "None",
+                                                                    "content": "",
+                                                                    "children": [
+                                                                        {
+                                                                            "root": "epsilon",
+                                                                            "children": []
+                                                                        }
+                                                                    ]
                                                                 }
                                                             ]
                                                         }
