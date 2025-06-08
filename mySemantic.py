@@ -503,7 +503,6 @@ class Semantic:
             attr.nextlist = expr_attr.falselist
             attr.has_return = block_attr.has_return
             item["attribute"] = attr
-
         elif prod_str == "IfStmt":
             # IfStmt -> if BoolExpr M Block | if BoolExpr M Block N M ElsePart
             if len(to_strs) == 4:
@@ -536,6 +535,7 @@ class Semantic:
         elif prod_str == "ElsePart":
             # ElsePart -> else IfStmt | else Block
             item["attribute"] = tmp_symbol_stack[1]["attribute"]
+
         elif prod_str == "M":
             # M -> None
             tmp = Attribute()
