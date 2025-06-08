@@ -153,9 +153,9 @@ class Semantic:
 
     def backpatch(self, nextlist, target):
         for index in nextlist:
-            quad = list(self.quaternion_table[index])
-            quad[3] = str(target)  # 修改 result 字段为目标地址
-            self.quaternion_table[index] = tuple(quad)
+            quaternion = self.quaternion_table[index]
+            # 修改 result 字段为目标地址
+            quaternion.tar = self.start_address + target
 
     def raise_error(self, type, loc, msg):
         if type == "Error":
@@ -166,7 +166,7 @@ class Semantic:
         prod_str = self.get_str_by_production_id(production_id)
         to_ids = self.productions[production_id].to_ids
         to_strs = [self.get_str_by_id(i) for i in to_ids]
-
+        # print(prod_str)
         if prod_str == "Program":
             # Program -> DeclList | None
             pass
@@ -205,29 +205,17 @@ class Semantic:
             func_attr = tmp_symbol_stack[1]["attribute"]
             proc_index = func_attr.place
             func_obj = self.process_table[proc_index]
-            try:
-                block_attr = tmp_symbol_stack[2]["attribute"]
-                block_nextlist = block_attr.nextlist
-                self.backpatch(block_nextlist, len(self.quaternion_table))  # 回填 block 结尾跳转地址
-            except KeyError:
-                pass
-            if func_obj.return_type == "void":
+
+            if func_obj.return_type == "void" and not func_attr.has_return:
                 self.emit("ret", "-", "-", "-")
+            elif func_obj.return_type != "void" and not func_attr.has_return:
+                self.raise_error("Error", loc, f"函数 {func_obj.name} 没有返回值")
+                return
 
             # 设置程序入口
             if func_obj.name == "main":
                 # 保证四元式表第一个为 j main
                 self.quaternion_table[0].tar = str(func_obj.start_address)
-        elif prod_str == "DeclOnly":
-            # let VarDeclInner : Type ;
-            var_name = tmp_symbol_stack[1]["attribute"].identifier
-            var_type = tmp_symbol_stack[-2]["tree"]["content"] if len(to_strs) == 5 else "i32"
-
-            if self.checkup_word(var_name):
-                self.raise_error("Error", loc, f"变量{var_name}重定义")
-            new_word = Word(name=var_name)
-            new_word.type = var_type
-            self.create_word(new_word)
         elif prod_str == "VarDeclInner":
             # VarDeclInner -> mut identifier
             var_name = tmp_symbol_stack[1]["tree"]["content"]
@@ -281,6 +269,16 @@ class Semantic:
                 attr = Attribute()
                 attr.param_list = []
                 item["attribute"] = attr
+
+        elif prod_str == "Lvalue":
+            # Lvalue -> identifier
+            var_name = tmp_symbol_stack[0]["tree"]["content"]
+            attr = Attribute()
+            attr.identifier = var_name
+            if not self.checkup_word(var_name):
+                self.raise_error("Error", loc, f"变量{var_name}未定义")
+                return
+            item["attribute"] = attr
         elif prod_str == "Expr":
             # Expr -> Expr CmpOp AddExpr | AddExpr
             if len(to_strs) == 1:
@@ -394,178 +392,164 @@ class Semantic:
             attr.op = tmp_symbol_stack[0]["tree"]["content"]
             item["attribute"] = attr
 
+        elif prod_str == "DeclOnly":
+            # DeclOnly -> let VarDeclInner : Type ;
+            var_name = tmp_symbol_stack[1]["attribute"].identifier
+            var_type = tmp_symbol_stack[-2]["tree"]["content"] if len(to_strs) == 5 else "i32"
+
+            if self.checkup_word(var_name):
+                self.raise_error("Error", loc, f"变量{var_name}重定义")
+                return
+
+            new_word = Word(name=var_name)
+            new_word.type = var_type
+            self.create_word(new_word)
+            attr = Attribute()
+            item["attribute"] = attr
+        elif prod_str == "DeclAssign":
+            # DeclAssign -> let VarDeclInner : Type = Expr ; | let VarDeclInner = Expr ;
+            var_name = tmp_symbol_stack[1]["attribute"].identifier
+            var_type = tmp_symbol_stack[3]["tree"]["content"] if to_strs[3] == ":" else "i32"
+            expr_attr = tmp_symbol_stack[-2]["attribute"]  # 最后一个Expr
+
+            if self.checkup_word(var_name):
+                self.raise_error("Error", loc, f"变量{var_name}重定义")
+                return
+
+            new_word = Word(name=var_name)
+            new_word.type = var_type
+            self.create_word(new_word)
+
+            self.emit("=", expr_attr.place, "-", var_name)
+            attr = Attribute()
+            item["attribute"] = attr
+        elif prod_str == "AssignStmt":
+            # AssignStmt -> Lvalue = Expr ;
+            var_name = tmp_symbol_stack[0]["attribute"].identifier
+            expr_attr = tmp_symbol_stack[2]["attribute"]
+
+            if not self.checkup_word(var_name):
+                self.raise_error("Error", loc, f"变量{var_name}未定义")
+                return
+
+            self.emit("=", expr_attr.place, "-", var_name)
+            attr = Attribute()
+            item["attribute"] = attr
+        elif prod_str == "ExprStmt":
+            # ExprStmt -> Expr ;
+            # 表达式语句，结果可能没有用，但仍要求值，故直接继承属性但不生成额外语义
+            item["attribute"] = tmp_symbol_stack[0]["attribute"]
+        elif prod_str == "ReturnStmt":
+            # ReturnStmt -> return ; | return Expr ;
+            if len(to_strs) == 3:
+                # return Expr ;
+                expr_attr = tmp_symbol_stack[1]["attribute"]
+                self.emit("ret", "-", "-", expr_attr.place)
+            else:
+                # return ;
+                self.emit("ret", "-", "-", "-")
+            attr = Attribute()
+            attr.has_return = True  # 标记函数有返回值
+            item["attribute"] = attr
+
+        elif prod_str == "Block":
+            # Block -> { StmtList }
+            item["attribute"] = tmp_symbol_stack[1]["attribute"]
+        elif prod_str == "StmtList":
+            # StmtList -> Stmt M StmtList | None
+            if to_strs[0] == "Stmt":
+                # StmtList -> Stmt M StmtList
+                stmt_attr = tmp_symbol_stack[0]["attribute"]
+                m_attr = tmp_symbol_stack[1]["attribute"]
+                rest_attr = tmp_symbol_stack[2]["attribute"]
+                # 将 stmt 的 nextlist 回填到 M 的四元式位置
+                self.backpatch(stmt_attr.nextlist, m_attr.quad)
+                attr = Attribute()
+                attr.has_return = stmt_attr.has_return or rest_attr.has_return
+                item["attribute"] = attr
+            else:
+                item["attribute"] = Attribute()
+        elif prod_str == "Stmt":
+            # Stmt -> LoopStmt | IfStmt | DeclOnly | DeclAssign | AssignStmt | ExprStmt | ReturnStmt | ;
+            if to_strs[0] == ";":
+                # Stmt -> ;
+                attr = Attribute()
+                item["attribute"] = attr
+            else:
+                item["attribute"] = tmp_symbol_stack[0]["attribute"]
+        elif prod_str == "BoolExpr":
+            # BoolExpr -> Expr
+            # 直接继承 Expr 的属性
+            attr = tmp_symbol_stack[0]["attribute"]
+            attr.truelist = [len(self.quaternion_table)]  # 条件为真跳转目标
+            attr.falselist = [len(self.quaternion_table) + 1]  # 条件为假跳转目标
+            self.emit("jnz", attr.place, "-", "-")  # 占位跳转
+            self.emit("j", "-", "-", "-")
+            item["attribute"] = attr
+        elif prod_str == "LoopStmt":
+            # LoopStmt -> WhileStmt
+            item["attribute"] = tmp_symbol_stack[0]["attribute"]
+        elif prod_str == "WhileStmt":
+            # WhileStmt -> while M BoolExpr M Block
+            m1 = tmp_symbol_stack[1]["attribute"]
+            expr_attr = tmp_symbol_stack[2]["attribute"]
+            m2 = tmp_symbol_stack[3]["attribute"]
+            block_attr = tmp_symbol_stack[4]["attribute"]
+
+            self.backpatch(expr_attr.truelist, m2.quad)  # 条件为真跳转到循环体
+            self.backpatch(block_attr.nextlist, m1.quad)  # 循环体结束后跳转到判断条件
+            self.emit("j", "-", "-", m1.quad + self.start_address)  # 回到判断条件
+            attr = Attribute()
+            attr.nextlist = expr_attr.falselist
+            attr.has_return = block_attr.has_return
+            item["attribute"] = attr
+
+        elif prod_str == "IfStmt":
+            # IfStmt -> if BoolExpr M Block | if BoolExpr M Block N M ElsePart
+            if len(to_strs) == 4:
+                # IfStmt -> if BoolExprExpr M Block
+                expr_attr = tmp_symbol_stack[1]["attribute"]
+                m_attr = tmp_symbol_stack[2]["attribute"]
+                block_attr = tmp_symbol_stack[3]["attribute"]
+
+                self.backpatch(expr_attr.truelist, m_attr.quad)
+                attr = Attribute()
+                attr.nextlist = expr_attr.falselist + block_attr.nextlist
+                attr.has_return = block_attr.has_return
+                item["attribute"] = attr
+            else:
+                # IfStmt -> if BoolExpr M Block N M ElsePart
+                expr_attr = tmp_symbol_stack[1]["attribute"]
+                m1 = tmp_symbol_stack[2]["attribute"]
+                block_attr = tmp_symbol_stack[3]["attribute"]
+                n = tmp_symbol_stack[4]["attribute"]
+                m2 = tmp_symbol_stack[5]["attribute"]
+                else_attr = tmp_symbol_stack[6]["attribute"]
+
+                self.backpatch(expr_attr.truelist, m1.quad)
+                self.backpatch(expr_attr.falselist, m2.quad)
+
+                attr = Attribute()
+                attr.nextlist = block_attr.nextlist + n.nextlist + else_attr.nextlist
+                attr.has_return = block_attr.has_return and else_attr.has_return
+                item["attribute"] = attr
+        elif prod_str == "ElsePart":
+            # ElsePart -> else IfStmt | else Block
+            item["attribute"] = tmp_symbol_stack[1]["attribute"]
         elif prod_str == "M":
             # M -> None
             tmp = Attribute()
             tmp.quad = len(self.quaternion_table)
             item["attribute"] = tmp
-
-    def analyse1(self, production_id, loc, item, tmp_symbol_stack):
-        prod_str = self.get_str_by_production_id(production_id)
-        to_ids = self.productions[production_id].to_ids
-        to_strs = [self.get_str_by_id(i) for i in to_ids]
-
-        if prod_str == "Program":
-            # Program -> DeclList | None
-            pass
-
-        elif prod_str == "DeclList":
-            # DeclList -> Decl DeclList | Decl
-            if len(to_strs) == 2:
-                # Decl DeclList
-                pass
-            else:
-                # 单个 Decl
-                pass
-
-        elif prod_str == "Decl":
-            # Decl -> FunctionDecl
-            pass
-
-        elif prod_str == "FunctionDecl":
-            # FunctionDecl -> P FunctionHeader Block
-            pass
-
-        elif prod_str == "FunctionHeader":
-            # FunctionHeader -> fn identifier ( ParamList )
-            #                 | fn identifier ( ParamList ) -> Type
-            # 开始函数定义
-            if len(to_strs) == 5:
-                # 没有返回值
-                pass
-            elif len(to_strs) == 7:
-                # 有返回值类型
-                pass
-
-        elif prod_str == "ParamList":
-            # ParamList -> Param ParamListTail | None
-            if to_strs[0] == "Param":
-                pass
-            elif to_strs[0] == "None":
-                pass
-
-        elif prod_str == "ParamListTail":
-            # ParamListTail -> , Param ParamListTail | None
-            if to_strs[0] == ",":
-                pass
-            elif to_strs[0] == "None":
-                pass
-
-        elif prod_str == "Param":
-            # Param -> VarDeclInner : Type
-            pass
-
-        elif prod_str == "VarDeclInner":
-            # VarDeclInner -> mut identifier
-            pass
-        # ------------------------------------------------------------------------------------------
-        elif prod_str == "Block":
-            # Block -> { StmtList }
-            pass
-
-        elif prod_str == "StmtList":
-            # StmtList -> Stmt StmtList | None
-            if len(to_strs) == 2:
-                pass
-            else:
-                pass
-
-        elif prod_str == "Stmt":
-            # Stmt -> LoopStmt | IfStmt | DeclOnly | DeclAssign | AssignStmt | ExprStmt | ReturnStmt | BreakStmt | ContinueStmt | ;
-            pass
-
-        elif prod_str == "LoopStmt":
-            # LoopStmt -> WhileStmt
-            pass
-
-        elif prod_str == "WhileStmt":
-            # WhileStmt -> while Expr Block
-            pass
-
-        elif prod_str == "IfStmt":
-            # IfStmt -> if Expr Block ElsePart
-            pass
-
-        elif prod_str == "ElsePart":
-            # ElsePart -> else IfStmt | else Block | None
-            pass
-
-        elif prod_str == "DeclOnly":
-            # DeclOnly -> let VarDeclInner : Type ; | let VarDeclInner ;
-            pass
-
-        elif prod_str == "DeclAssign":
-            # DeclAssign -> let VarDeclInner : Type = Expr ; | let VarDeclInner = Expr ;
-            pass
-
-        elif prod_str == "AssignStmt":
-            # AssignStmt -> Lvalue = Expr ;
-            pass
-
-        elif prod_str == "ExprStmt":
-            # ExprStmt -> Expr ;
-            pass
-
-        elif prod_str == "ReturnStmt":
-            # ReturnStmt -> return ; | return Expr ;
-            pass
-
-        elif prod_str == "Lvalue":
-            # Lvalue -> identifier
-            pass
-        # ------------------------------------------------------------------------------------------
-        elif prod_str == "Expr":
-            # Expr -> Expr CmpOp AddExpr | AddExpr
-            pass
-
-        elif prod_str == "AddExpr":
-            # AddExpr -> AddExpr AddOp Term | Term
-            pass
-
-        elif prod_str == "Term":
-            # Term -> Term MulOp Factor | Factor
-            pass
-
-        elif prod_str == "Factor":
-            # Factor -> Element
-            pass
-
-        elif prod_str == "Element":
-            # Element -> integer_constant | identifier | ( Expr ) | identifier ( ArgList )
-            pass
-
-        elif prod_str == "ArgList":
-            # ArgList -> Expr ArgListTail | None
-            pass
-
-        elif prod_str == "ArgListTail":
-            # ArgListTail -> , Expr ArgListTail | None
-            pass
-
-        elif prod_str == "CmpOp":
-            # CmpOp -> < | <= | > | >= | == | !=
-            pass
-
-        elif prod_str == "AddOp":
-            # AddOp -> + | -
-            pass
-
-        elif prod_str == "MulOp":
-            # MulOp -> * | /
-            pass
-
-        elif prod_str == "Type":
-            # Type -> i32
-            pass
-        elif prod_str == "M":
-            # M -> None
-            pass
         elif prod_str == "N":
             # N -> None
-            pass
-        elif prod_str == "None":
-            # None -> epsilon
-            pass
+            attr = Attribute()
+            # 当前 then_block 后的位置，即将插入跳转 over-else 的 j 指令
+            attr.nextlist = [len(self.quaternion_table)]
+            # 插入 j _ _ _ 占位跳转，暂时不知道目标
+            self.emit("j", "-", "-", "-")
+            item["attribute"] = attr
+
 
     def getQuaternationTable(self):
         ret = [["地址", "四元式"]]
