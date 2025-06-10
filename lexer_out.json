@@ -829,100 +829,19 @@
     },
     {
         "id": 93,
-        "content": "a",
-        "prop": "identifier",
-        "loc": {
-            "row": 18,
-            "col": 5
-        }
-    },
-    {
-        "id": 94,
-        "content": "=",
-        "prop": "equal",
-        "loc": {
-            "row": 18,
-            "col": 7
-        }
-    },
-    {
-        "id": 95,
-        "content": "p1",
-        "prop": "identifier",
-        "loc": {
-            "row": 18,
-            "col": 9
-        }
-    },
-    {
-        "id": 96,
-        "content": "(",
-        "prop": "l_paren",
-        "loc": {
-            "row": 18,
-            "col": 11
-        }
-    },
-    {
-        "id": 97,
-        "content": "a",
-        "prop": "identifier",
-        "loc": {
-            "row": 18,
-            "col": 12
-        }
-    },
-    {
-        "id": 98,
-        "content": ",",
-        "prop": "comma",
-        "loc": {
-            "row": 18,
-            "col": 13
-        }
-    },
-    {
-        "id": 99,
-        "content": "b",
-        "prop": "identifier",
-        "loc": {
-            "row": 18,
-            "col": 15
-        }
-    },
-    {
-        "id": 100,
-        "content": ")",
-        "prop": "r_paren",
-        "loc": {
-            "row": 18,
-            "col": 16
-        }
-    },
-    {
-        "id": 101,
-        "content": ";",
-        "prop": "semi",
-        "loc": {
-            "row": 18,
-            "col": 17
-        }
-    },
-    {
-        "id": 102,
         "content": "}",
         "prop": "r_brace",
         "loc": {
-            "row": 19,
+            "row": 18,
             "col": 1
         }
     },
     {
-        "id": 103,
+        "id": 94,
         "content": "#",
         "prop": "eof",
         "loc": {
-            "row": 20,
+            "row": 19,
             "col": 1
         }
     }

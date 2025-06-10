@@ -1,7 +1,7 @@
 class Attribute:
     def __init__(self):
         self.identifier = ""  # 标识符
-        self.type = ""  # 值类型 int word tmp_word
+        self.type = "void"  # 值类型 i32或空
         self.place = None  # 存储位置或临时变量名字
         self.quad = None  # 下一条四元式位置
         self.truelist = []  # true条件跳转目标
@@ -20,7 +20,7 @@ class Word:
     def __init__(self, id=0, name=""):
         self.id = id
         self.name = name
-        self.type = ""
+        self.type = "void"  # 默认类型为 void
 
     def __repr__(self):
         return f"<Word Object (ID:{self.id}, Name:{self.name}, Type:{self.type})>"
@@ -38,9 +38,9 @@ class Quaternion:
 
 
 class Process:
-    def __init__(self, start_address = None):
+    def __init__(self, start_address=None):
         self.name = ""
-        self.return_type = ""
+        self.return_type = "void"  # 默认返回类型为 void
         self.actual_returns = []
         self.start_address = start_address
         self.words_table = [Word()]
@@ -80,7 +80,7 @@ class Semantic:
             self.productions[production_id].non_terminal_symbol_id - len(self.terminal_symbols)
             ]
 
-    def create_process(self, start_address = None):
+    def create_process(self, start_address=None):
         self.process_table.append(Process(start_address))
 
     def checkup_process(self, name):
@@ -212,6 +212,12 @@ class Semantic:
                 self.raise_error("Error", loc, f"函数 {func_obj.name} 没有返回值")
                 return
 
+            words_table = func_obj.words_table[1:]  # 去掉第一个占位的 Word
+            for word in words_table:
+                if word.type == "void":
+                    self.raise_error("Error", loc, f"函数 {func_obj.name} 中无法推导变量 {word.name} 类型")
+                    return
+
             # 设置程序入口
             if func_obj.name == "main":
                 # 保证四元式表第一个为 j main
@@ -230,7 +236,7 @@ class Semantic:
 
             word = Word(name=param_name)
             word.type = param_type
-            self.create_word(word) # 在函数中的变量表中增加一项
+            self.create_word(word)  # 在函数中的变量表中增加一项
 
             attr = Attribute()
             attr.word = word  # 暂存 Word 对象
@@ -275,9 +281,12 @@ class Semantic:
             var_name = tmp_symbol_stack[0]["tree"]["content"]
             attr = Attribute()
             attr.identifier = var_name
-            if not self.checkup_word(var_name):
+            place = self.checkup_word(var_name)
+            if not place:
                 self.raise_error("Error", loc, f"变量{var_name}未定义")
                 return
+            attr.place = place  # 在当前函数的 words_table 中的下标
+            attr.type = self.get_word(place).type
             item["attribute"] = attr
         elif prod_str == "Expr":
             # Expr -> Expr CmpOp AddExpr | AddExpr
@@ -287,6 +296,24 @@ class Semantic:
                 lhs = tmp_symbol_stack[0]["attribute"]
                 op = tmp_symbol_stack[1]["attribute"].op
                 rhs = tmp_symbol_stack[2]["attribute"]
+
+                if lhs.type == "void":
+                    place = self.checkup_word(lhs.place)
+                    if not place:
+                        self.raise_error("Error", loc, f"函数 {lhs.place} 无返回值")
+                        return
+                    if rhs.type == "void":
+                        self.raise_error("Error", loc, f"无法推导变量 {lhs.place} 类型")
+                        return
+                    self.get_word(place).type = rhs.type
+                    lhs.type = rhs.type
+                elif rhs.type == "void":
+                    place = self.checkup_word(rhs.place)
+                    if not place:
+                        self.raise_error("Error", loc, f"函数 {rhs.place} 无返回值")
+                        return
+                    self.get_word(place).type = lhs.type
+                    rhs.type = lhs.type
 
                 temp_var = self.new_temp()
                 self.emit(op, lhs.place, rhs.place, temp_var)
@@ -303,10 +330,29 @@ class Semantic:
                 op = tmp_symbol_stack[1]["attribute"].op
                 rhs = tmp_symbol_stack[2]["attribute"]
 
+                if lhs.type == "void":
+                    place = self.checkup_word(lhs.place)
+                    if not place:
+                        self.raise_error("Error", loc, f"函数 {lhs.place} 无返回值")
+                        return
+                    if rhs.type == "void":
+                        self.raise_error("Error", loc, f"无法推导变量 {lhs.place} 类型")
+                        return
+                    self.get_word(place).type = rhs.type
+                    lhs.type = rhs.type
+                elif rhs.type == "void":
+                    place = self.checkup_word(rhs.place)
+                    if not place:
+                        self.raise_error("Error", loc, f"函数 {rhs.place} 无返回值")
+                        return
+                    self.get_word(place).type = lhs.type
+                    rhs.type = lhs.type
+
                 temp_var = self.new_temp()
                 self.emit(op, lhs.place, rhs.place, temp_var)
 
                 attr = Attribute()
+                attr.type = lhs.type
                 attr.place = temp_var
                 item["attribute"] = attr
         elif prod_str == "Term":
@@ -318,11 +364,30 @@ class Semantic:
                 op = tmp_symbol_stack[1]["attribute"].op
                 rhs = tmp_symbol_stack[2]["attribute"]
 
+                if lhs.type == "void":
+                    place = self.checkup_word(lhs.place)
+                    if not place:
+                        self.raise_error("Error", loc, f"函数 {lhs.place} 无返回值")
+                        return
+                    if rhs.type == "void":
+                        self.raise_error("Error", loc, f"无法推导变量 {lhs.place} 类型")
+                        return
+                    self.get_word(place).type = rhs.type
+                    lhs.type = rhs.type
+                elif rhs.type == "void":
+                    place = self.checkup_word(rhs.place)
+                    if not place:
+                        self.raise_error("Error", loc, f"函数 {rhs.place} 无返回值")
+                        return
+                    self.get_word(place).type = lhs.type
+                    rhs.type = lhs.type
+
                 temp_var = self.new_temp()
                 self.emit(op, lhs.place, rhs.place, temp_var)
 
                 attr = Attribute()
                 attr.place = temp_var
+                attr.type = lhs.type  # 保持类型一致
                 item["attribute"] = attr
         elif prod_str == "Factor":
             # Factor -> Element
@@ -332,6 +397,16 @@ class Semantic:
             if len(to_strs) == 1:
                 content = tmp_symbol_stack[0]["tree"]["content"]
                 attr = Attribute()
+                if to_strs[0] == "identifier":
+                    if not self.checkup_word(content):
+                        self.raise_error("Error", loc, f"变量 {content} 未定义")
+                        return
+                    word = self.get_word(self.checkup_word(content))
+                    attr.identifier = content
+                    attr.type = word.type
+                else:
+                    attr.type = "i32"  # 整型常量
+
                 attr.place = content  # 常量或变量名
                 item["attribute"] = attr
             elif to_strs[0] == "(":
@@ -343,14 +418,29 @@ class Semantic:
                 args_attr = tmp_symbol_stack[2]["attribute"]
                 arg_places = args_attr.arg_list
 
+                if not self.checkup_process(func_name):
+                    self.raise_error("Error", loc, f"函数 {func_name} 未定义")
+                    return
+                else:
+                    func_obj = self.get_process(func_name)
+                    if len(func_obj.param) != len(arg_places):
+                        self.raise_error("Error", loc, f"函数 {func_name} 参数个数不匹配")
+                        return
+
                 for i, arg in enumerate(arg_places):
                     self.emit("arg", "-", "-", arg)
 
-                ret_temp = self.new_temp()
-                self.emit("call", func_name, len(arg_places), ret_temp)
-
                 attr = Attribute()
-                attr.place = ret_temp
+                if func_obj.return_type == "void":
+                    # 如果函数返回类型为 void，则不需要接收返回值
+                    self.emit("call", func_name, len(arg_places), "-")
+                    attr.place = func_name
+                else:
+                    ret_temp = self.new_temp()
+                    self.emit("call", func_name, len(arg_places), ret_temp)
+                    attr.place = ret_temp
+
+                attr.type = func_obj.return_type
                 item["attribute"] = attr
         elif prod_str == "ArgList":
             # ArgList -> Expr ArgListTail | None
@@ -425,12 +515,30 @@ class Semantic:
             item["attribute"] = attr
         elif prod_str == "AssignStmt":
             # AssignStmt -> Lvalue = Expr ;
-            var_name = tmp_symbol_stack[0]["attribute"].identifier
+            lvalue_attr = tmp_symbol_stack[0]["attribute"]
+            var_name = lvalue_attr.identifier
             expr_attr = tmp_symbol_stack[2]["attribute"]
 
             if not self.checkup_word(var_name):
                 self.raise_error("Error", loc, f"变量{var_name}未定义")
                 return
+
+            if lvalue_attr.type == "void":
+                place = lvalue_attr.place
+                if expr_attr.type == "void":
+                    self.raise_error("Error", loc, f"无法推导变量 {var_name} 类型")
+                    return
+                self.get_word(place).type = expr_attr.type
+                lvalue_attr.type = expr_attr.type
+            elif expr_attr.type == "void":
+                place = self.checkup_word(expr_attr.place)
+                if not place:
+                    self.raise_error("Error", loc, f"函数 {expr_attr.place} 无返回值")
+                    return
+                else:
+                    self.raise_error("Error", loc, f"变量 {expr_attr} 类型为 void，请先赋值")
+                    return
+
 
             self.emit("=", expr_attr.place, "-", var_name)
             attr = Attribute()
@@ -441,12 +549,19 @@ class Semantic:
             item["attribute"] = tmp_symbol_stack[0]["attribute"]
         elif prod_str == "ReturnStmt":
             # ReturnStmt -> return ; | return Expr ;
+            current_process = self.process_table[-1]
             if len(to_strs) == 3:
                 # return Expr ;
+                if current_process.return_type == "void":
+                    self.raise_error("Error", loc, "函数返回值类型为 void，但有返回值")
+                    return
                 expr_attr = tmp_symbol_stack[1]["attribute"]
                 self.emit("ret", "-", "-", expr_attr.place)
             else:
                 # return ;
+                if current_process.return_type != "void":
+                    self.raise_error("Error", loc, "函数返回值类型非 void，但没有返回值")
+                    return
                 self.emit("ret", "-", "-", "-")
             attr = Attribute()
             attr.has_return = True  # 标记函数有返回值
@@ -549,7 +664,6 @@ class Semantic:
             # 插入 j _ _ _ 占位跳转，暂时不知道目标
             self.emit("j", "-", "-", "-")
             item["attribute"] = attr
-
 
     def getQuaternationTable(self):
         ret = [["地址", "四元式"]]
