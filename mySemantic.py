@@ -157,6 +157,26 @@ class Semantic:
             # 修改 result 字段为目标地址
             quaternion.tar = self.start_address + target
 
+    def deduce_void_type(self, lhs, rhs, loc):
+        if lhs.type == "void":
+            place = self.checkup_word(lhs.place)
+            if not place:
+                self.raise_error("Error", loc, f"函数 {lhs.place} 返回类型为 void，不能参与运算")
+                return False
+            if rhs.type == "void":
+                self.raise_error("Error", loc, f"无法推导变量 {lhs.place} 的类型")
+                return False
+            self.get_word(place).type = rhs.type
+            lhs.type = rhs.type
+        elif rhs.type == "void":
+            place = self.checkup_word(rhs.place)
+            if not place:
+                self.raise_error("Error", loc, f"函数 {rhs.place} 返回类型为 void，不能参与运算")
+                return False
+            self.get_word(place).type = lhs.type
+            rhs.type = lhs.type
+        return True
+
     def raise_error(self, type, loc, msg):
         if type == "Error":
             self.error_occur = True
@@ -203,13 +223,14 @@ class Semantic:
         elif prod_str == "FunctionDecl":
             # FunctionDecl -> P FunctionHeader Block
             func_attr = tmp_symbol_stack[1]["attribute"]
+            block_attr = tmp_symbol_stack[2]["attribute"]
             proc_index = func_attr.place
             func_obj = self.process_table[proc_index]
 
-            if func_obj.return_type == "void" and not func_attr.has_return:
+            if func_obj.return_type == "void" and not block_attr.has_return:
                 self.emit("ret", "-", "-", "-")
-            elif func_obj.return_type != "void" and not func_attr.has_return:
-                self.raise_error("Error", loc, f"函数 {func_obj.name} 没有返回值")
+            elif func_obj.return_type != "void" and not block_attr.has_return:
+                self.raise_error("Error", loc, f"函数 {func_obj.name} 可能没有返回值")
                 return
 
             words_table = func_obj.words_table[1:]  # 去掉第一个占位的 Word
@@ -297,23 +318,8 @@ class Semantic:
                 op = tmp_symbol_stack[1]["attribute"].op
                 rhs = tmp_symbol_stack[2]["attribute"]
 
-                if lhs.type == "void":
-                    place = self.checkup_word(lhs.place)
-                    if not place:
-                        self.raise_error("Error", loc, f"函数 {lhs.place} 无返回值")
-                        return
-                    if rhs.type == "void":
-                        self.raise_error("Error", loc, f"无法推导变量 {lhs.place} 类型")
-                        return
-                    self.get_word(place).type = rhs.type
-                    lhs.type = rhs.type
-                elif rhs.type == "void":
-                    place = self.checkup_word(rhs.place)
-                    if not place:
-                        self.raise_error("Error", loc, f"函数 {rhs.place} 无返回值")
-                        return
-                    self.get_word(place).type = lhs.type
-                    rhs.type = lhs.type
+                if not self.deduce_void_type(lhs, rhs, loc):
+                    return
 
                 temp_var = self.new_temp()
                 self.emit(op, lhs.place, rhs.place, temp_var)
@@ -330,23 +336,8 @@ class Semantic:
                 op = tmp_symbol_stack[1]["attribute"].op
                 rhs = tmp_symbol_stack[2]["attribute"]
 
-                if lhs.type == "void":
-                    place = self.checkup_word(lhs.place)
-                    if not place:
-                        self.raise_error("Error", loc, f"函数 {lhs.place} 无返回值")
-                        return
-                    if rhs.type == "void":
-                        self.raise_error("Error", loc, f"无法推导变量 {lhs.place} 类型")
-                        return
-                    self.get_word(place).type = rhs.type
-                    lhs.type = rhs.type
-                elif rhs.type == "void":
-                    place = self.checkup_word(rhs.place)
-                    if not place:
-                        self.raise_error("Error", loc, f"函数 {rhs.place} 无返回值")
-                        return
-                    self.get_word(place).type = lhs.type
-                    rhs.type = lhs.type
+                if not self.deduce_void_type(lhs, rhs, loc):
+                    return
 
                 temp_var = self.new_temp()
                 self.emit(op, lhs.place, rhs.place, temp_var)
@@ -364,23 +355,8 @@ class Semantic:
                 op = tmp_symbol_stack[1]["attribute"].op
                 rhs = tmp_symbol_stack[2]["attribute"]
 
-                if lhs.type == "void":
-                    place = self.checkup_word(lhs.place)
-                    if not place:
-                        self.raise_error("Error", loc, f"函数 {lhs.place} 无返回值")
-                        return
-                    if rhs.type == "void":
-                        self.raise_error("Error", loc, f"无法推导变量 {lhs.place} 类型")
-                        return
-                    self.get_word(place).type = rhs.type
-                    lhs.type = rhs.type
-                elif rhs.type == "void":
-                    place = self.checkup_word(rhs.place)
-                    if not place:
-                        self.raise_error("Error", loc, f"函数 {rhs.place} 无返回值")
-                        return
-                    self.get_word(place).type = lhs.type
-                    rhs.type = lhs.type
+                if not self.deduce_void_type(lhs, rhs, loc):
+                    return
 
                 temp_var = self.new_temp()
                 self.emit(op, lhs.place, rhs.place, temp_var)
@@ -533,12 +509,11 @@ class Semantic:
             elif expr_attr.type == "void":
                 place = self.checkup_word(expr_attr.place)
                 if not place:
-                    self.raise_error("Error", loc, f"函数 {expr_attr.place} 无返回值")
+                    self.raise_error("Error", loc, f"函数 {expr_attr.place} 返回类型为 void，不能参与运算")
                     return
                 else:
                     self.raise_error("Error", loc, f"变量 {expr_attr} 类型为 void，请先赋值")
                     return
-
 
             self.emit("=", expr_attr.place, "-", var_name)
             attr = Attribute()

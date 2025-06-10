@@ -16,5 +16,5 @@ fn p1(mut a: i32, mut b: i32) {
 fn main() {
     let mut a: i32 = 3;
     let mut b: i32 = 4;
-    a = p1(a, b);
+    p1(a, b);
 }

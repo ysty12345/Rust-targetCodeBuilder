@@ -1,6 +1,6 @@
 {
     "root": "Program",
-    "content": "fnp1(muta:i32,mutb:i32){letmutc:i32;c=a+b*c+1;ifc>10{c=0;}elseifc<5{c=1;}else{c=2;}whilec<5{c=c+1;}}fnmain(){letmuta:i32=3;letmutb:i32=4;}",
+    "content": "fnp1(muta:i32,mutb:i32){letmutc:i32;c=a+b*c+1;ifc>10{c=0;}elseifc<5{c=1;}else{c=2;}whilec<5{c=c+1;}}fnmain(){letmuta:i32=3;letmutb:i32=4;p1(a,b);}",
     "children": [
         {
             "root": "S",
@@ -20,7 +20,7 @@
         },
         {
             "root": "DeclList",
-            "content": "fnp1(muta:i32,mutb:i32){letmutc:i32;c=a+b*c+1;ifc>10{c=0;}elseifc<5{c=1;}else{c=2;}whilec<5{c=c+1;}}fnmain(){letmuta:i32=3;letmutb:i32=4;}",
+            "content": "fnp1(muta:i32,mutb:i32){letmutc:i32;c=a+b*c+1;ifc>10{c=0;}elseifc<5{c=1;}else{c=2;}whilec<5{c=c+1;}}fnmain(){letmuta:i32=3;letmutb:i32=4;p1(a,b);}",
             "children": [
                 {
                     "root": "Decl",
@@ -1533,15 +1533,15 @@
                 },
                 {
                     "root": "DeclList",
-                    "content": "fnmain(){letmuta:i32=3;letmutb:i32=4;}",
+                    "content": "fnmain(){letmuta:i32=3;letmutb:i32=4;p1(a,b);}",
                     "children": [
                         {
                             "root": "Decl",
-                            "content": "fnmain(){letmuta:i32=3;letmutb:i32=4;}",
+                            "content": "fnmain(){letmuta:i32=3;letmutb:i32=4;p1(a,b);}",
                             "children": [
                                 {
                                     "root": "FunctionDecl",
-                                    "content": "fnmain(){letmuta:i32=3;letmutb:i32=4;}",
+                                    "content": "fnmain(){letmuta:i32=3;letmutb:i32=4;p1(a,b);}",
                                     "children": [
                                         {
                                             "root": "P",
@@ -1603,7 +1603,7 @@
                                         },
                                         {
                                             "root": "Block",
-                                            "content": "{letmuta:i32=3;letmutb:i32=4;}",
+                                            "content": "{letmuta:i32=3;letmutb:i32=4;p1(a,b);}",
                                             "children": [
                                                 {
                                                     "root": "{",
@@ -1612,7 +1612,7 @@
                                                 },
                                                 {
                                                     "root": "StmtList",
-                                                    "content": "letmuta:i32=3;letmutb:i32=4;",
+                                                    "content": "letmuta:i32=3;letmutb:i32=4;p1(a,b);",
                                                     "children": [
                                                         {
                                                             "root": "Stmt",
@@ -1726,7 +1726,7 @@
                                                         },
                                                         {
                                                             "root": "StmtList",
-                                                            "content": "letmutb:i32=4;",
+                                                            "content": "letmutb:i32=4;p1(a,b);",
                                                             "children": [
                                                                 {
                                                                     "root": "Stmt",
@@ -1840,15 +1840,202 @@
                                                                 },
                                                                 {
                                                                     "root": "StmtList",
-                                                                    "content": "",
+                                                                    "content": "p1(a,b);",
                                                                     "children": [
                                                                         {
-                                                                            "root": "None",
+                                                                            "root": "Stmt",
+                                                                            "content": "p1(a,b);",
+                                                                            "children": [
+                                                                                {
+                                                                                    "root": "ExprStmt",
+                                                                                    "content": "p1(a,b);",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "root": "Expr",
+                                                                                            "content": "p1(a,b)",
+                                                                                            "children": [
+                                                                                                {
+                                                                                                    "root": "AddExpr",
+                                                                                                    "content": "p1(a,b)",
+                                                                                                    "children": [
+                                                                                                        {
+                                                                                                            "root": "Term",
+                                                                                                            "content": "p1(a,b)",
+                                                                                                            "children": [
+                                                                                                                {
+                                                                                                                    "root": "Factor",
+                                                                                                                    "content": "p1(a,b)",
+                                                                                                                    "children": [
+                                                                                                                        {
+                                                                                                                            "root": "Element",
+                                                                                                                            "content": "p1(a,b)",
+                                                                                                                            "children": [
+                                                                                                                                {
+                                                                                                                                    "root": "identifier",
+                                                                                                                                    "content": "p1",
+                                                                                                                                    "children": []
+                                                                                                                                },
+                                                                                                                                {
+                                                                                                                                    "root": "(",
+                                                                                                                                    "content": "(",
+                                                                                                                                    "children": []
+                                                                                                                                },
+                                                                                                                                {
+                                                                                                                                    "root": "ArgList",
+                                                                                                                                    "content": "a,b",
+                                                                                                                                    "children": [
+                                                                                                                                        {
+                                                                                                                                            "root": "Expr",
+                                                                                                                                            "content": "a",
+                                                                                                                                            "children": [
+                                                                                                                                                {
+                                                                                                                                                    "root": "AddExpr",
+                                                                                                                                                    "content": "a",
+                                                                                                                                                    "children": [
+                                                                                                                                                        {
+                                                                                                                                                            "root": "Term",
+                                                                                                                                                            "content": "a",
+                                                                                                                                                            "children": [
+                                                                                                                                                                {
+                                                                                                                                                                    "root": "Factor",
+                                                                                                                                                                    "content": "a",
+                                                                                                                                                                    "children": [
+                                                                                                                                                                        {
+                                                                                                                                                                            "root": "Element",
+                                                                                                                                                                            "content": "a",
+                                                                                                                                                                            "children": [
+                                                                                                                                                                                {
+                                                                                                                                                                                    "root": "identifier",
+                                                                                                                                                                                    "content": "a",
+                                                                                                                                                                                    "children": []
+                                                                                                                                                                                }
+                                                                                                                                                                            ]
+                                                                                                                                                                        }
+                                                                                                                                                                    ]
+                                                                                                                                                                }
+                                                                                                                                                            ]
+                                                                                                                                                        }
+                                                                                                                                                    ]
+                                                                                                                                                }
+                                                                                                                                            ]
+                                                                                                                                        },
+                                                                                                                                        {
+                                                                                                                                            "root": "ArgListTail",
+                                                                                                                                            "content": ",b",
+                                                                                                                                            "children": [
+                                                                                                                                                {
+                                                                                                                                                    "root": ",",
+                                                                                                                                                    "content": ",",
+                                                                                                                                                    "children": []
+                                                                                                                                                },
+                                                                                                                                                {
+                                                                                                                                                    "root": "Expr",
+                                                                                                                                                    "content": "b",
+                                                                                                                                                    "children": [
+                                                                                                                                                        {
+                                                                                                                                                            "root": "AddExpr",
+                                                                                                                                                            "content": "b",
+                                                                                                                                                            "children": [
+                                                                                                                                                                {
+                                                                                                                                                                    "root": "Term",
+                                                                                                                                                                    "content": "b",
+                                                                                                                                                                    "children": [
+                                                                                                                                                                        {
+                                                                                                                                                                            "root": "Factor",
+                                                                                                                                                                            "content": "b",
+                                                                                                                                                                            "children": [
+                                                                                                                                                                                {
+                                                                                                                                                                                    "root": "Element",
+                                                                                                                                                                                    "content": "b",
+                                                                                                                                                                                    "children": [
+                                                                                                                                                                                        {
+                                                                                                                                                                                            "root": "identifier",
+                                                                                                                                                                                            "content": "b",
+                                                                                                                                                                                            "children": []
+                                                                                                                                                                                        }
+                                                                                                                                                                                    ]
+                                                                                                                                                                                }
+                                                                                                                                                                            ]
+                                                                                                                                                                        }
+                                                                                                                                                                    ]
+                                                                                                                                                                }
+                                                                                                                                                            ]
+                                                                                                                                                        }
+                                                                                                                                                    ]
+                                                                                                                                                },
+                                                                                                                                                {
+                                                                                                                                                    "root": "ArgListTail",
+                                                                                                                                                    "content": "",
+                                                                                                                                                    "children": [
+                                                                                                                                                        {
+                                                                                                                                                            "root": "None",
+                                                                                                                                                            "content": "",
+                                                                                                                                                            "children": [
+                                                                                                                                                                {
+                                                                                                                                                                    "root": "epsilon",
+                                                                                                                                                                    "children": []
+                                                                                                                                                                }
+                                                                                                                                                            ]
+                                                                                                                                                        }
+                                                                                                                                                    ]
+                                                                                                                                                }
+                                                                                                                                            ]
+                                                                                                                                        }
+                                                                                                                                    ]
+                                                                                                                                },
+                                                                                                                                {
+                                                                                                                                    "root": ")",
+                                                                                                                                    "content": ")",
+                                                                                                                                    "children": []
+                                                                                                                                }
+                                                                                                                            ]
+                                                                                                                        }
+                                                                                                                    ]
+                                                                                                                }
+                                                                                                            ]
+                                                                                                        }
+                                                                                                    ]
+                                                                                                }
+                                                                                            ]
+                                                                                        },
+                                                                                        {
+                                                                                            "root": ";",
+                                                                                            "content": ";",
+                                                                                            "children": []
+                                                                                        }
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "root": "M",
                                                                             "content": "",
                                                                             "children": [
                                                                                 {
-                                                                                    "root": "epsilon",
-                                                                                    "children": []
+                                                                                    "root": "None",
+                                                                                    "content": "",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "root": "epsilon",
+                                                                                            "children": []
+                                                                                        }
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "root": "StmtList",
+                                                                            "content": "",
+                                                                            "children": [
+                                                                                {
+                                                                                    "root": "None",
+                                                                                    "content": "",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "root": "epsilon",
+                                                                                            "children": []
+                                                                                        }
+                                                                                    ]
                                                                                 }
                                                                             ]
                                                                         }

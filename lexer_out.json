@@ -829,19 +829,82 @@
     },
     {
         "id": 93,
-        "content": "}",
-        "prop": "r_brace",
+        "content": "p1",
+        "prop": "identifier",
         "loc": {
             "row": 18,
-            "col": 1
+            "col": 5
         }
     },
     {
         "id": 94,
+        "content": "(",
+        "prop": "l_paren",
+        "loc": {
+            "row": 18,
+            "col": 7
+        }
+    },
+    {
+        "id": 95,
+        "content": "a",
+        "prop": "identifier",
+        "loc": {
+            "row": 18,
+            "col": 8
+        }
+    },
+    {
+        "id": 96,
+        "content": ",",
+        "prop": "comma",
+        "loc": {
+            "row": 18,
+            "col": 9
+        }
+    },
+    {
+        "id": 97,
+        "content": "b",
+        "prop": "identifier",
+        "loc": {
+            "row": 18,
+            "col": 11
+        }
+    },
+    {
+        "id": 98,
+        "content": ")",
+        "prop": "r_paren",
+        "loc": {
+            "row": 18,
+            "col": 12
+        }
+    },
+    {
+        "id": 99,
+        "content": ";",
+        "prop": "semi",
+        "loc": {
+            "row": 18,
+            "col": 13
+        }
+    },
+    {
+        "id": 100,
+        "content": "}",
+        "prop": "r_brace",
+        "loc": {
+            "row": 19,
+            "col": 1
+        }
+    },
+    {
+        "id": 101,
         "content": "#",
         "prop": "eof",
         "loc": {
-            "row": 19,
+            "row": 20,
             "col": 1
         }
     }
