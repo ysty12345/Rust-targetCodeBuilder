@@ -465,10 +465,10 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     setModernStyle(app)
     # 默认文件名
-    default_cfg_filename = "new.cfg"
+    default_cfg_filename = "mytest.cfg"
     default_code_filename = "mytest.c"
 
-    if 1:
+    if 0:
         cfg_filename = default_cfg_filename
         code_filename = default_code_filename
     else:
