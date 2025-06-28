@@ -155,6 +155,7 @@ class Parser:
         self.find_gos()
         self.find_gotos_and_actions()
 
+        self.semantic = None
         self.semantic_quaternation = []
         self.semantic_error_occur = False
         self.semantic_error_message = []
@@ -547,6 +548,7 @@ class Parser:
         mySemantic = Semantic(
             self.productions, self.non_terminal_symbols, self.terminal_symbols
         )
+        self.semantic = mySemantic
 
         stack = []
         item = {"state": 0, "tree": {"root": '#'}}

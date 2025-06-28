@@ -9,6 +9,8 @@ from PyQt5.QtWidgets import (
 )
 from myLexer import Lexer
 from myParser import Parser
+from myCodeGenerator import CodeGenerator
+from myBlockDivider import BlockDivider
 from tokenType import tokenKeywords, tokenSymbols
 
 
@@ -103,7 +105,13 @@ class Compiler(QObject):
         self.action_table = self.parser.get_action_table()
 
     def process(self, code_str):
-        token_list, lexer_success = self.getLex(code_str)
+        try:
+            token_list, lexer_success = self.getLex(code_str)
+        except Exception as e:
+            token_list = [{"id": 0, "content": str(e), "prop": "Error", "loc": {"row": 1, "col": 1}}]
+            print("Lexer Error:", e)
+            lexer_success = False
+
         try:
             parse_result = self.getParse(token_list)
         except Exception as e:
@@ -133,6 +141,21 @@ class Compiler(QObject):
     def getParse(self, token_list):
         if self.parser is not None:
             parsed_result = self.parser.getParse(token_list)
+            if not self.parser.semantic_error_occur:
+                blockDivider = BlockDivider(self.parser.semantic.quaternion_table)
+                blockDivider.computeBlocks(self.parser.semantic.getFuncTable())
+                codeGenerator = CodeGenerator(blockDivider.func_blocks, self.parser.semantic.process_table,
+                                              self.parser.semantic.words_table)
+                codes = codeGenerator.getObjectCode()
+                with open("./code.asm", "w") as f:
+                    f.write("\n".join(codes))
+                code_error_occur = codeGenerator.error_occur
+                code_error_msg = codeGenerator.error_msg
+            else:
+                code_error_occur = False
+                code_error_msg = []
+                codes = []
+
             return {
                 "ast": parsed_result,
                 "goto": self.goto_table,
@@ -141,6 +164,7 @@ class Compiler(QObject):
                 "semantic_quaternation": self.parser.semantic_quaternation,
                 "semantic_error_occur": self.parser.semantic_error_occur,
                 "semantic_error_message": self.parser.semantic_error_message,
+                "target_code": [[code] for code in codes],
             }
         else:
             launching = "Parser 正在启动，请稍等。"
@@ -152,6 +176,7 @@ class Compiler(QObject):
                 "semantic_quaternation": [[launching]],
                 "semantic_error_occur": False,
                 "semantic_error_message": [],
+                "target_code": [[launching]],
             }
 
     def getLex(self, code_str: str):
@@ -175,6 +200,7 @@ class CompilerGUI(QMainWindow):
         self.table_tab = QWidget()
         self.process_tab = QWidget()
         self.quad_tab = QWidget()
+        self.code_tab = QWidget()
 
         self.tabs.addTab(self.editor_tab, "源代码编辑")
         self.tabs.addTab(self.lex_tab, "词法分析")
@@ -183,6 +209,7 @@ class CompilerGUI(QMainWindow):
         self.tabs.addTab(self.table_tab, "分析表")
         self.tabs.addTab(self.process_tab, "规约过程")
         self.tabs.addTab(self.quad_tab, "中间代码")
+        self.tabs.addTab(self.code_tab, "目标代码")
 
         self.initEditorTab()
         self.initLexTab()
@@ -191,6 +218,7 @@ class CompilerGUI(QMainWindow):
         self.initTableTab()
         self.initProcessTab()
         self.initQuadTab()
+        self.initCodeTab()
 
         self.loadFile(filename)
 
@@ -276,6 +304,12 @@ class CompilerGUI(QMainWindow):
         layout.addWidget(self.quad_table)
         self.quad_tab.setLayout(layout)
 
+    def initCodeTab(self):
+        layout = QVBoxLayout()
+        self.code_table = QTableWidget()
+        layout.addWidget(self.code_table)
+        self.code_tab.setLayout(layout)
+
     def updateAll(self, data):
         self.showLexResult(data["lexer"])
         self.showAstTree(data["ast"])
@@ -283,6 +317,7 @@ class CompilerGUI(QMainWindow):
         self.showTables(data["action"], data["goto"])
         self.showProcess(data["process"])
         self.showQuad(data["semantic_quaternation"])
+        self.showCode(data["target_code"])
 
     def showLexResult(self, lexer):
         headers = ["id", "content", "prop", "row", "col"]
@@ -457,6 +492,22 @@ class CompilerGUI(QMainWindow):
 
         beautify_table_widget(self.quad_table)
 
+    def showCode(self, code_data):
+        headers = ["目标代码"]
+        self.code_table.setColumnCount(len(headers))
+        self.code_table.setHorizontalHeaderLabels(headers)
+        self.code_table.setRowCount(len(code_data) - 1)
+
+        for i, row in enumerate(code_data[1:]):
+            code_str = row[0]
+            item = QTableWidgetItem(code_str)
+            item.setTextAlignment(Qt.AlignLeft | Qt.AlignTop)
+            item.setFlags(item.flags() ^ Qt.ItemIsEditable)
+            item.setToolTip(code_str)
+            self.code_table.setItem(i, 0, item)
+
+        beautify_table_widget(self.code_table)
+
 
 if __name__ == "__main__":
     # Initialize the application and the compiler
@@ -468,7 +519,7 @@ if __name__ == "__main__":
     default_cfg_filename = "mytest.cfg"
     default_code_filename = "mytest.c"
 
-    if 0:
+    if 1:
         cfg_filename = default_cfg_filename
         code_filename = default_code_filename
     else:

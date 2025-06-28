@@ -640,6 +640,9 @@ class Semantic:
             self.emit("j", "-", "-", "-")
             item["attribute"] = attr
 
+    def getFuncTable(self):
+        return [{"name": proc.name, "enter": proc.start_address} for proc in self.process_table]
+
     def getQuaternationTable(self):
         ret = [["地址", "四元式"]]
         for i, instr in enumerate(self.quaternion_table):
